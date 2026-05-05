@@ -1,5 +1,5 @@
 // ✅ Correct — plain object, no interface
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000'
+  apiUrl: 'https://praising-ice-gravy.ngrok-free.dev'
 };

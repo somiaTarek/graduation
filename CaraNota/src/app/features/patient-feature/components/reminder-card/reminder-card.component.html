@@ -1,0 +1,113 @@
+<!-- src/app/features/patient/components/reminder-card/reminder-card.component.html -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4
+            flex items-center gap-4">
+
+  <!-- Type icon -->
+  <div [class]="'w-10 h-10 rounded-full flex items-center justify-center shrink-0 ' + iconBgClass">
+
+    @switch (reminder.type) {
+      @case ('medication') {
+        <!-- Pill / capsule icon -->
+        <svg [class]="'w-5 h-5 ' + iconColorClass" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.5 2.6a5 5 0 0 1 7.07 7.07L9.5 17.73a5 5 0 1 1-7.07-7.07Z"/>
+          <line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/>
+        </svg>
+      }
+      @case ('appointment') {
+        <!-- Calendar icon -->
+        <svg [class]="'w-5 h-5 ' + iconColorClass" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      }
+      @case ('health') {
+        <!-- Heart icon -->
+        <svg [class]="'w-5 h-5 ' + iconColorClass" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      }
+    }
+
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 min-w-0">
+
+    <!-- Title + Active/Inactive badge + edit icon -->
+    <div class="flex items-center gap-2 flex-wrap mb-0.5">
+      <span class="text-sm font-semibold text-gray-900">{{ reminder.title }}</span>
+
+      @if (reminder.isActive) {
+        <span class="text-xs font-semibold bg-blue-600 text-white px-2.5 py-0.5 rounded-full">
+          Active
+        </span>
+      } @else {
+        <span class="text-xs font-semibold bg-gray-200 text-gray-500 px-2.5 py-0.5 rounded-full">
+          Inactive
+        </span>
+      }
+
+      <!-- Edit pencil -->
+      <button (click)="edited.emit(reminder)"
+              class="text-gray-400 hover:text-blue-600 transition-colors ml-1">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Subtitle (dosage · frequency) -->
+    @if (reminder.subtitle) {
+      <p class="text-xs text-gray-400 mb-1">{{ reminder.subtitle }}</p>
+    }
+
+    <!-- Time + recurrence -->
+    <div class="flex items-center gap-3 text-xs text-gray-400">
+      <span class="flex items-center gap-1">
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        {{ reminder.time }}
+      </span>
+
+      @if (reminder.type === 'appointment' && reminder.date) {
+        <span class="flex items-center gap-1">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          {{ reminder.recurrence }}
+        </span>
+      } @else {
+        <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px] font-medium">
+          {{ reminder.recurrence }}
+        </span>
+      }
+    </div>
+
+  </div>
+
+  <!-- Toggle switch -->
+  <button
+    (click)="toggled.emit(reminder)"
+    [class]="reminder.isActive
+      ? 'relative w-11 h-6 rounded-full bg-blue-600 transition-colors shrink-0'
+      : 'relative w-11 h-6 rounded-full bg-gray-200 transition-colors shrink-0'">
+    <span
+      [class]="reminder.isActive
+        ? 'absolute top-1 left-6 w-4 h-4 bg-white rounded-full shadow transition-all'
+        : 'absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-all'">
+    </span>
+  </button>
+
+</div>

@@ -1,3 +1,53 @@
-/* You can add global styles to this file, and also import other style files */
-
+/* src/styles.css */
+/* src/styles.css */
 @import "tailwindcss";
+
+
+@theme {
+  --color-navy:       hsla(234, 45%, 26%, 1);
+  --color-navy-dark:  hsla(234, 45%, 18%, 1);
+  --color-navy-light: hsla(234, 45%, 34%, 1);
+  --color-sky-card:   hsla(214, 93%, 88%, 1);
+  --color-blue-brand: hsla(214, 100%, 70%, 1);
+}
+
+/* ── Reset ── */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Root app element ── */
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/*
+  Makes each lazy-loaded page component fill the viewport.
+  Only applies flex + min-height to the DIRECT child of router-outlet.
+  We do NOT cascade into grandchildren (removed the `> div` rule)
+  because it was forcing every nested div to min-height:100vh,
+  which broke the sidebar layout on the receptionist dashboard.
+*/
+router-outlet + * {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100vh;
+}
+
+/*
+  REMOVED — this was the layout-breaking rule:
+
+  router-outlet + * > div {
+    display: flex;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  The receptionist dashboard manages its own layout internally
+  using Tailwind (flex, flex-1, overflow-hidden, etc.)
+*/

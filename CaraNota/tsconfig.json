@@ -4,7 +4,8 @@
   "compileOnSave": false,
   "compilerOptions": {
         "verbatimModuleSyntax": false  // ← if this exists, it forces type-only imports
-,
+,     "rootDir": "./src",
+
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,

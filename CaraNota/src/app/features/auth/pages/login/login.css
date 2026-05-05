@@ -1,0 +1,10 @@
+/* login.component.css */
+
+/*
+  ONLY job of this file: make <app-login> behave like a full-screen block.
+  Everything else is handled by Tailwind in the HTML.
+*/
+:host {
+  display: block;
+  min-height: 100vh;
+}

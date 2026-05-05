@@ -1,0 +1,73 @@
+<!-- src/app/features/doctor/visit-session/visit-session.component.html -->
+<div class="min-h-screen bg-gray-100 font-sans">
+  
+
+  <main class="max-w-2xl mx-auto px-4 py-12 space-y-8">
+
+    <!-- Patient info card -->
+    @if (appointment()) {
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
+          Current Visit
+        </p>
+        <h2 class="text-xl font-bold text-gray-900">{{ appointment()!.patientName }}</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ appointment()!.appointmentType }} ·
+          {{ formatTime(appointment()!.startTime) }} – {{ formatTime(appointment()!.endTime) }}
+        </p>
+      </div>
+    }
+
+    <!-- Visit ID for reference -->
+    <p class="text-xs text-gray-400 text-center">Visit ID: {{ visitId() }}</p>
+
+    <!-- Two action cards -->
+    <div class="grid grid-cols-2 gap-6">
+
+      <!-- Start Recording -->
+      <button
+        (click)="goToRecording()"
+        class="bg-navy text-white rounded-3xl p-8 flex flex-col items-center gap-4
+               hover:bg-navy-dark transition-all duration-300 shadow-md group text-left">
+
+        <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center
+                    group-hover:bg-white/20 transition-colors">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4
+                 M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/>
+          </svg>
+        </div>
+
+        <div>
+          <p class="font-bold text-lg">Start Recording</p>
+          <p class="text-sm text-white/70 mt-1">AI-powered transcription</p>
+        </div>
+      </button>
+
+      <!-- Add Note Manually -->
+      <button
+        (click)="goToManualNote()"
+        class="bg-white border border-gray-200 text-gray-800 rounded-3xl p-8
+               flex flex-col items-center gap-4 hover:border-navy hover:shadow-md
+               transition-all duration-300 group text-left">
+
+        <div class="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center
+                    group-hover:bg-navy/10 transition-colors">
+          <svg class="w-7 h-7 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5
+                 m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </div>
+
+        <div>
+          <p class="font-bold text-lg text-gray-900">Add Note Manually</p>
+          <p class="text-sm text-gray-500 mt-1">Type SOAP notes directly</p>
+        </div>
+      </button>
+
+    </div>
+
+  </main>
+</div>

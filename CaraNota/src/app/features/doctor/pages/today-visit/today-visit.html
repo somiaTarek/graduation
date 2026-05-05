@@ -1,0 +1,98 @@
+<!-- src/app/features/doctor/today-visits/today-visits.component.html -->
+<div class="min-h-screen bg-gray-100 font-sans">
+  <app-doctor-navbar />
+
+  <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Today's Visits</h1>
+      <p class="text-sm text-gray-500 mt-1">{{ todayLabel }}</p>
+    </div>
+
+    <!-- Loading skeleton -->
+    @if (isLoading()) {
+      <div class="space-y-4">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="bg-white rounded-2xl p-5 animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+            <div class="h-3 bg-gray-100 rounded w-1/4"></div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-5 text-sm">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading() && !error() && appointments().length === 0) {
+      <div class="bg-white rounded-2xl p-10 text-center">
+        <p class="text-gray-500 text-sm">No scheduled appointments for today.</p>
+      </div>
+    }
+
+    <!-- Appointment cards -->
+    @if (!isLoading()) {
+      <div class="space-y-4">
+        @for (appt of appointments(); track appt.appointmentID) {
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm
+                      flex items-center justify-between gap-4">
+
+            <!-- Left: time + patient info -->
+            <div class="flex items-center gap-4">
+              <!-- Time block -->
+              <div class="text-center min-w-15">
+                <p class="text-base font-bold text-navy">{{ formatTime(appt.startTime) }}</p>
+                <p class="text-xs text-gray-400">{{ formatTime(appt.endTime) }}</p>
+              </div>
+
+              <!-- Divider -->
+              <div class="w-px h-10 bg-gray-200"></div>
+
+              <!-- Patient info -->
+              <div>
+                <p class="font-semibold text-gray-900">{{ appt.patientName }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ appt.appointmentType }}</p>
+              </div>
+            </div>
+
+            <!-- Right: status badge + Start Visit button -->
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-medium bg-green-50 text-green-700
+                           px-3 py-1 rounded-full border border-green-200">
+                {{ appt.status }}
+              </span>
+
+              <button
+                (click)="startVisit(appt)"
+                [disabled]="loadingAppointmentId() === appt.appointmentID"
+                class="bg-navy text-white text-sm font-semibold px-5 py-2
+                       rounded-full hover:bg-navy-dark transition-colors
+                       disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2">
+
+                @if (loadingAppointmentId() === appt.appointmentID) {
+                  <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                            stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                  Starting...
+                } @else {
+                  Start Visit
+                }
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </main>
+</div>

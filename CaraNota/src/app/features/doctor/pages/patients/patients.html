@@ -1,0 +1,56 @@
+<div class="patients-page">
+
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex items-center justify-center h-screen">
+      <div class="flex flex-col items-center gap-3 text-gray-400">
+        <svg class="w-8 h-8 animate-spin text-[#6B9FD4]" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        <p class="text-sm">Loading patients...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div class="flex items-center justify-center h-screen">
+      <div class="bg-red-50 border border-red-200 rounded-2xl px-8 py-6 text-center">
+        <p class="text-red-500 font-semibold mb-2">Failed to load patients</p>
+        <p class="text-red-400 text-sm mb-4">{{ error() }}</p>
+        <button (click)="loadPatients()"
+          class="bg-red-100 hover:bg-red-200 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg transition">
+          Retry
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Success state -->
+  @if (!isLoading() && !error()) {
+    <div class="page-body">
+
+      <app-patients-sidebar
+        [patients]="patients()"
+        [selectedPatientId]="selectedPatient()?.id ?? 0"
+        (patientSelected)="onPatientSelected($event)"
+      />
+
+      <div class="detail-panel">
+        @if (selectedPatient()) {
+          <app-patient-header [patient]="selectedPatient()!" />
+
+          <!-- ✅ Pass appointments & medications as separate inputs -->
+          <app-patient-tabs
+            [patient]="selectedPatient()!"
+            [appointments]="appointments()"
+            [medications]="medications()"
+          />
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

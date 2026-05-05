@@ -1,0 +1,52 @@
+<!-- src/app/features/patient/pages/visits/visits.component.html -->
+<div class="min-h-screen bg-gray-50 flex flex-col">
+
+  <app-patient-navbar />
+
+  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">Visit History</h1>
+      <p class="text-sm text-gray-400 mt-1">Review your past medical consultations and summaries</p>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center py-20">
+        <svg class="w-8 h-8 text-blue-600 animate-spin" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (error() && !isLoading()) {
+      <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Empty -->
+    @if (!isLoading() && !error() && visits().length === 0) {
+      <div class="text-center py-20 text-gray-400">
+        <svg class="w-12 h-12 mx-auto mb-3" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <p class="text-sm">No visits found.</p>
+      </div>
+    }
+
+    <!-- Visit cards -->
+    <div class="space-y-4">
+      @for (visit of visits(); track visit.id) {
+        <app-visit-card [visit]="visit" (viewDetails)="onViewDetails($event)" />
+      }
+    </div>
+
+  </main>
+
+  <app-patient-footer />
+</div>

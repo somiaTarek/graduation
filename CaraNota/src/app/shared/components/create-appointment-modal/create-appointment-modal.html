@@ -1,0 +1,144 @@
+<!-- Overlay -->
+ // shared/components/create-appointment-modal/create-appointment-modal.html
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50
+            flex items-center justify-center p-4">
+
+  <!-- Modal card -->
+  <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-6 space-y-5
+              max-h-[90vh] overflow-y-auto">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-900">Book Appointment</h2>
+      <button (click)="close()"
+              class="w-8 h-8 rounded-full bg-gray-100 flex items-center
+                     justify-center hover:bg-gray-200 transition-colors
+                     text-gray-500 text-xl leading-none">
+        ×
+      </button>
+    </div>
+
+    <!-- Patient ID (only if not preselected) -->
+    @if (!preselectedPatientId) {
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">
+          Patient ID
+        </label>
+        <input type="number"
+               [ngModel]="patientIdInput()"
+               (ngModelChange)="patientIdInput.set($event)"
+               placeholder="Enter patient ID"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2.5
+                      text-sm focus:outline-none focus:border-navy
+                      focus:ring-1 focus:ring-navy"/>
+      </div>
+    }
+
+    <!-- Doctor selector — receptionist picks the doctor -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">
+        Doctor
+      </label>
+
+      @if (isLoadingDoctors()) {
+        <p class="text-sm text-gray-400">Loading doctors...</p>
+      } @else {
+        <select [ngModel]="selectedDoctorId()"
+                (ngModelChange)="selectedDoctorId.set(+$event); onDateOrDoctorChange()"
+                class="w-full border border-gray-200 rounded-xl px-4 py-2.5
+                       text-sm focus:outline-none focus:border-navy
+                       focus:ring-1 focus:ring-navy">
+          <option [value]="null" disabled selected>Select a doctor</option>
+          @for (doctor of doctors(); track doctor.id) {
+            <option [value]="doctor.id">
+              {{ doctor.fullName }}
+              @if (doctor.specialty) { — {{ doctor.specialty }} }
+            </option>
+          }
+        </select>
+      }
+    </div>
+
+    <!-- Appointment Type -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">
+        Appointment Type
+      </label>
+      <select [ngModel]="appointmentType()"
+              (ngModelChange)="appointmentType.set($event)"
+              class="w-full border border-gray-200 rounded-xl px-4 py-2.5
+                     text-sm focus:outline-none focus:border-navy
+                     focus:ring-1 focus:ring-navy">
+        @for (type of appointmentTypes; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Date picker -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">
+        Date
+      </label>
+      <input type="date"
+             [ngModel]="selectedDate()"
+             (ngModelChange)="selectedDate.set($event); onDateOrDoctorChange()"
+             [min]="todayIso"
+             class="w-full border border-gray-200 rounded-xl px-4 py-2.5
+                    text-sm focus:outline-none focus:border-navy
+                    focus:ring-1 focus:ring-navy"/>
+    </div>
+
+    <!-- Time slot picker -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-2">
+        Available Slots
+      </label>
+
+      @if (!selectedDoctorId() || !selectedDate()) {
+        <p class="text-sm text-gray-400">
+          Select a doctor and date first.
+        </p>
+      } @else if (isLoadingSlots()) {
+        <p class="text-sm text-gray-400">Loading slots...</p>
+      } @else if (availableSlots().length === 0) {
+        <p class="text-sm text-gray-400">
+          No available slots for this date.
+        </p>
+      } @else {
+        <div class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+          @for (slot of availableSlots(); track slot.start) {
+            <button
+              (click)="selectSlot(slot)"
+              [class.bg-navy]="selectedSlot()?.start === slot.start"
+              [class.text-white]="selectedSlot()?.start === slot.start"
+              [class.border-navy]="selectedSlot()?.start === slot.start"
+              class="border border-gray-200 rounded-xl py-2 text-xs
+                     font-medium text-gray-700 hover:border-navy
+                     transition-colors">
+              {{ formatSlotTime(slot.start) }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <p class="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-xl">
+        {{ error() }}
+      </p>
+    }
+
+    <!-- Submit -->
+    <button
+      (click)="submit()"
+      [disabled]="isSubmitting() || !selectedSlot()"
+      class="w-full bg-navy text-white font-semibold py-3 rounded-xl
+             text-sm hover:bg-navy-dark transition-colors
+             disabled:opacity-50 disabled:cursor-not-allowed">
+      {{ isSubmitting() ? 'Booking...' : 'Confirm Appointment' }}
+    </button>
+
+  </div>
+</div>

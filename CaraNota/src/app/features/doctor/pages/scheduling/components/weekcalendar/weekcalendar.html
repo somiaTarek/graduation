@@ -1,0 +1,89 @@
+<!-- components/weekcalendar/weekcalendar.html -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+  <!-- Week navigation -->
+  <div class="flex items-center justify-between bg-[#D6E8F7] px-5 py-3">
+    <button (click)="prevWeek()"
+            class="w-8 h-8 flex items-center justify-center rounded-full
+                   hover:bg-white/50 transition">
+      <svg class="w-4 h-4 text-[#4A7EBB]" fill="none" stroke="currentColor"
+           stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <p class="text-sm font-semibold text-[#4A7EBB]">{{ weekLabel }}</p>
+
+    <button (click)="nextWeek()"
+            class="w-8 h-8 flex items-center justify-center rounded-full
+                   hover:bg-white/50 transition">
+      <svg class="w-4 h-4 text-[#4A7EBB]" fill="none" stroke="currentColor"
+           stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Scrollable grid -->
+  <div class="overflow-x-auto">
+    <div style="min-width: 640px;">
+
+      <!-- Day headers -->
+      <div class="grid border-b border-gray-100"
+           style="grid-template-columns: 56px repeat(6, 1fr);">
+        <div></div>
+        @for (day of weekDays; track day.date) {
+          <div class="text-center py-3 border-l border-gray-100">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {{ day.name }}
+            </p>
+            <p class="text-sm font-bold text-gray-700 mt-0.5">{{ day.date }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Time rows -->
+      <div class="relative">
+        @for (slot of timeSlots; track slot.hour; let rowIdx = $index) {
+          <div class="grid border-gray-100"
+               [class.border-t]="rowIdx > 0"
+               style="grid-template-columns: 56px repeat(6, 1fr);">
+
+            <!-- Hour label -->
+            <div class="text-[11px] text-gray-400 text-right pr-3 pt-1
+                        font-medium leading-none select-none">
+              {{ slot.label }}
+            </div>
+
+            <!-- Day cells -->
+            @for (day of weekDays; track day.date; let dayIdx = $index) {
+              <div class="relative border-l border-gray-100"
+                   [style.height.px]="rowHeight">
+
+                @for (evt of getEvents(dayIdx, slot.hour); track evt.id) {
+                  <div class="absolute left-1 right-1 rounded-lg px-2 py-1
+                              text-[11px] font-semibold cursor-pointer z-10
+                              shadow-sm select-none"
+                       [class.bg-\[#C8DCEF\]]="evt.color === 'blue'"
+                       [class.text-\[#3A6EA5\]]="evt.color === 'blue'"
+                       [class.bg-\[#F5C6CE\]]="evt.color === 'pink'"
+                       [class.text-\[#9B2335\]]="evt.color === 'pink'"
+                       [style.top.px]="getTopOffset(slot.hour, evt.startHour)"
+                       [style.height.px]="getEventHeight(evt.startHour, evt.endHour)">
+                    <p class="leading-tight">
+                      {{ formatEventTime(evt.startHour, evt.endHour) }}
+                    </p>
+                    <p class="leading-tight truncate">{{ evt.patientName }}</p>
+                  </div>
+                }
+
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+.patients-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.page-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.detail-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: white;
+}

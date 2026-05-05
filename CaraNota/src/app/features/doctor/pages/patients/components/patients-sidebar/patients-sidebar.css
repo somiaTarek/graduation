@@ -1,0 +1,139 @@
+.sidebar {
+  width: 300px;
+  min-width: 300px;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 72px);
+  padding: 24px 16px 16px;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #475569;
+  background: transparent;
+  width: 100%;
+}
+
+.search-input::placeholder {
+  color: #cbd5e1;
+}
+
+.patient-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patient-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.patient-item:hover {
+  background: #e8f0fe;
+}
+
+.patient-item.selected {
+  background: #dbeafe;
+  border-left-color: #2563eb;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1e293b;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-item.selected .avatar {
+  background: #1d4ed8;
+}
+
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.patient-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.patient-meta {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.patient-id {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.no-results {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 24px 0;
+}
+
+.go-home {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  padding: 12px 4px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 12px;
+  transition: color 0.15s;
+}
+
+.go-home:hover {
+  color: #1d4ed8;
+}

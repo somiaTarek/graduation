@@ -1,0 +1,180 @@
+<div class="tabs-wrapper">
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === tab.key"
+        (click)="setTab(tab.key)">
+
+        @if (tab.key === 'overview') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        }
+        @if (tab.key === 'medication') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.5 20H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v7"/>
+            <path d="M15 19l2 2 4-4"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="11" y2="14"/>
+          </svg>
+        }
+        @if (tab.key === 'appointment') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        }
+        @if (tab.key === 'summarization') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        }
+
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Tab content -->
+  <div class="tab-content">
+
+    <!-- OVERVIEW -->
+    @if (activeTab === 'overview') {
+      <div class="overview-grid">
+        <div class="info-card">
+          <h4 class="card-label">Personal Info</h4>
+          <!-- ✅ name → fullName -->
+          <div class="info-row"><span>Full name</span><span>{{ patient.fullName }}</span></div>
+          <div class="info-row"><span>Gender</span><span>{{ patient.gender | titlecase }}</span></div>
+          <div class="info-row"><span>Blood type</span><span>{{ patient.bloodType }}</span></div>
+          <!-- ✅ phone → phoneNumber -->
+          <div class="info-row"><span>Phone</span><span>{{ patient.phoneNumber }}</span></div>
+          <div class="info-row"><span>Email</span><span>{{ patient.email }}</span></div>
+        </div>
+
+        <div class="info-card">
+          <h4 class="card-label">Allergies</h4>
+          <!-- ✅ allergies is a string, not array -->
+          @if (patient.allergies) {
+            <span class="allergy-tag">{{ patient.allergies }}</span>
+          } @else {
+            <p class="empty-note">No known allergies</p>
+          }
+
+          <h4 class="card-label" style="margin-top: 20px;">Active Medications</h4>
+          <!-- ✅ medications comes from @Input() not patient object -->
+          <p class="stat-number">{{ medications.length }}</p>
+          <p class="stat-label">total prescribed</p>
+        </div>
+      </div>
+    }
+
+    <!-- MEDICATION -->
+    @if (activeTab === 'medication') {
+      <div>
+        <div class="section-header">
+          <h3 class="section-title">Active Medications</h3>
+          <button class="add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add medication
+          </button>
+        </div>
+
+        <div class="med-list">
+          <!-- ✅ medications from @Input(), use API field names -->
+          @for (med of medications; track med.id) {
+            <div class="med-card">
+              <div class="med-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+                  <path d="M10.5 20H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v7"/>
+                  <line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="11" y2="14"/>
+                </svg>
+              </div>
+              <div class="med-info">
+                <div class="med-name-row">
+                  <!-- ✅ med.name → med.medicationName -->
+                  <span class="med-name">{{ med.medicationName }}</span>
+                  <span class="status-badge">{{ med.medicationType }}</span>
+                </div>
+                <!-- ✅ use API fields: strength, description -->
+                <p class="med-detail">{{ med.strength }}</p>
+                <p class="med-indication">{{ med.description }}</p>
+              </div>
+            </div>
+          }
+
+          @if (medications.length === 0) {
+            <p class="empty-note">No medications recorded for this patient.</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- APPOINTMENT -->
+    @if (activeTab === 'appointment') {
+      <div>
+        <div class="section-header">
+          <h3 class="section-title">Appointments</h3>
+          <button class="add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New appointment
+          </button>
+        </div>
+
+        <div class="appt-list">
+          <!-- ✅ appointments from @Input(), use API field names -->
+          @for (appt of appointments; track appt.id) {
+            <div class="appt-card">
+              <div class="appt-date-block">
+                <!-- ✅ appt.date → appt.appointmentDate -->
+                <span class="appt-date">{{ appt.appointmentDate | date:'mediumDate' }}</span>
+                <span class="appt-time">{{ appt.appointmentDate | date:'shortTime' }}</span>
+              </div>
+              <div class="appt-info">
+                <!-- ✅ appt.type → appt.appointmentType -->
+                <span class="appt-type">{{ appt.appointmentType }}</span>
+              </div>
+              <span class="appt-status"
+                [class.scheduled]="appt.status === 'Scheduled'"
+                [class.completed]="appt.status === 'Completed'"
+                [class.cancelled]="appt.status === 'Cancelled'">
+                {{ appt.status }}
+              </span>
+            </div>
+          }
+
+          @if (appointments.length === 0) {
+            <p class="empty-note">No appointments found for this patient.</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- SUMMARIZATION -->
+    @if (activeTab === 'summarization') {
+      <div class="summary-section">
+        <div class="section-header">
+          <h3 class="section-title">AI Clinical Summary</h3>
+          <button class="add-btn">Generate Summary</button>
+        </div>
+        <div class="summary-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p>No summary generated yet.</p>
+          <p style="font-size: 12px;">Click "Generate Summary" to create an AI clinical note for this patient.</p>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

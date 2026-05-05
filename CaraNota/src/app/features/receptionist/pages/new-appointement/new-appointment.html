@@ -1,0 +1,53 @@
+<!-- src/app/features/receptionist/pages/new-appointment/new-appointment.html -->
+<div class="min-h-screen bg-gray-50 flex flex-col">
+
+  <app-receptionist-navbar />
+
+  <div class="flex-1 flex flex-col items-center pt-8 px-4">
+
+    <!-- Back link with real SVG arrow -->
+    <div class="w-full max-w-lg mb-4">
+      <button (click)="goBack()"
+              class="inline-flex items-center gap-2 text-sm text-gray-500
+                     hover:text-blue-700 transition-colors">
+        <!-- Left arrow SVG -->
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to dashboard
+      </button>
+    </div>
+
+    <!--
+      The existing CreateAppointmentModal renders with a fixed overlay by default.
+      We render it here as a page — the modal's own overlay is suppressed with CSS,
+      and we wrap it in a card ourselves.
+    -->
+    <div class="w-full max-w-lg">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">New Appointment</h2>
+
+      <!--
+        The modal component renders its own white card + form.
+        We use the [style] trick to neutralise the fixed overlay wrapper
+        so it flows normally on the page instead of floating.
+      -->
+      <style>
+        app-new-appointment-page app-create-appointment-modal > div:first-child {
+          position: static !important;
+          background: transparent !important;
+          backdrop-filter: none !important;
+          padding: 0 !important;
+          display: block !important;
+          z-index: auto !important;
+        }
+      </style>
+
+      <app-create-appointment-modal
+        (created)="onCreated()"
+        (closed)="goBack()" />
+    </div>
+
+  </div>
+</div>

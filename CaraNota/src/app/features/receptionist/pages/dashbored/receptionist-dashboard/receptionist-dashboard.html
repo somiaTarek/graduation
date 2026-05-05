@@ -1,0 +1,291 @@
+<!-- src/app/features/receptionist/pages/dashboard/receptionist-dashboard.html -->
+<!-- CHANGES:
+  - Action column: only shows a cancel icon (block) for Scheduled appointments
+  - Icons use inline SVG instead of material-icons to avoid text rendering bug
+-->
+<div class="min-h-screen bg-gray-50 flex flex-col">
+
+  <app-receptionist-navbar />
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────────── -->
+    <aside class="w-72 bg-white border-r border-gray-100 flex flex-col p-5 gap-5 shrink-0">
+
+      <!-- Create patient account -->
+      <button (click)="goToCreateAccount()"
+              class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white
+                     text-sm font-semibold px-4 py-3 rounded-xl transition-colors w-full">
+        <!-- Plus icon SVG -->
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Create a patient account
+      </button>
+
+      <!-- Calendar widget -->
+      <div class="bg-blue-50 rounded-2xl p-4">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-blue-700 font-semibold text-sm">
+            <!-- Calendar icon SVG -->
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Calendar
+          </div>
+          <!-- Chevron down SVG -->
+          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        <!-- Month nav -->
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-gray-700">{{ currentMonthLabel() }}</span>
+          <div class="flex gap-1">
+            <button (click)="prevMonth()"
+                    class="w-6 h-6 rounded-full hover:bg-white flex items-center
+                           justify-center text-gray-500 transition-colors">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <button (click)="nextMonth()"
+                    class="w-6 h-6 rounded-full hover:bg-white flex items-center
+                           justify-center text-gray-500 transition-colors">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Weekday labels -->
+        <div class="grid grid-cols-7 mb-1">
+          @for (wd of weekdays; track wd) {
+            <div class="text-center text-[10px] font-semibold text-gray-400 py-1">
+              {{ wd }}
+            </div>
+          }
+        </div>
+
+        <!-- Day cells -->
+        <div class="grid grid-cols-7 gap-y-0.5">
+          @for (day of calendarDays(); track $index) {
+            <button
+              (click)="selectDay(day)"
+              [disabled]="!day"
+              [class]="
+                !day
+                  ? 'invisible pointer-events-none h-7'
+                  : isSelected(day)
+                    ? 'w-7 h-7 mx-auto rounded-full bg-blue-700 text-white text-xs font-bold flex items-center justify-center'
+                    : isToday(day)
+                      ? 'w-7 h-7 mx-auto rounded-full border-2 border-blue-500 text-blue-700 text-xs font-bold flex items-center justify-center'
+                      : 'w-7 h-7 mx-auto rounded-full hover:bg-white text-gray-600 text-xs flex items-center justify-center transition-colors'
+              ">
+              {{ day?.getDate() }}
+            </button>
+          }
+        </div>
+
+        <!-- Clock -->
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-blue-100">
+          <span class="text-xs text-gray-400">Time</span>
+          <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+            {{ currentTime() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Spacer + Logout -->
+      <div class="mt-auto">
+        <button class="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500
+                       transition-colors px-2 py-2 rounded-lg hover:bg-red-50 w-full">
+          <!-- Logout SVG -->
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────────────────── -->
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- Search + New Appointment -->
+      <div class="flex items-center gap-4 mb-6">
+        <div class="flex-1 max-w-md relative">
+          <!-- Search icon SVG -->
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search patient name or type..."
+            [value]="searchQuery()"
+            (input)="onSearch($any($event.target).value)"
+            class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl
+                   text-sm focus:outline-none focus:border-blue-500 bg-white">
+        </div>
+
+        <button (click)="goToNewAppointment()"
+                class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white
+                       text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New appointment
+        </button>
+      </div>
+
+      <!-- Date heading -->
+      <p class="text-sm text-gray-500 mb-4">{{ todayLabel() }}</p>
+
+      <!-- Stats card -->
+      <div class="inline-flex items-center gap-4 bg-white rounded-2xl shadow-sm px-6 py-4 mb-6">
+        <div>
+          <p class="text-xs text-gray-400">Total appointments</p>
+          <p class="text-3xl font-bold text-[#0f1f3d]">{{ totalAppointments() }}</p>
+        </div>
+        <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
+          <!-- Calendar month SVG -->
+          <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Table card -->
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h2 class="text-base font-bold text-[#0f1f3d]">Today's Appointments</h2>
+        </div>
+
+        <!-- Loading -->
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-16 text-gray-400 gap-2">
+            <!-- Spinner SVG -->
+            <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Loading appointments...
+          </div>
+        }
+
+        <!-- Error -->
+        @if (error() && !isLoading()) {
+          <div class="text-center py-10 text-red-500 text-sm">{{ error() }}</div>
+        }
+
+        <!-- Empty -->
+        @if (!isLoading() && !error() && filteredAppointments().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
+            <!-- Event busy SVG -->
+            <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            <p class="text-sm">No appointments found.</p>
+          </div>
+        }
+
+        <!-- Table -->
+        @if (!isLoading() && filteredAppointments().length > 0) {
+          <table class="w-full">
+            <thead>
+              <tr class="text-xs font-semibold text-gray-400 border-b border-gray-100">
+                <th class="text-left px-6 py-3 font-semibold">Patient Name</th>
+                <th class="text-left px-4 py-3 font-semibold">Doctor</th>
+                <th class="text-left px-4 py-3 font-semibold">Time</th>
+                <th class="text-left px-4 py-3 font-semibold">Visit Type</th>
+                <th class="text-left px-4 py-3 font-semibold">Status</th>
+                <!-- Action column: only cancel icon shown for Scheduled -->
+                <th class="text-left px-4 py-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (appt of filteredAppointments(); track appt.appointmentID) {
+                <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+
+                  <td class="px-6 py-3 text-sm font-medium text-gray-800">
+                    {{ appt.patientName }}
+                  </td>
+
+                  <td class="px-4 py-3 text-sm text-gray-500">
+                    {{ appt.doctorName }}
+                  </td>
+
+                  <td class="px-4 py-3 text-sm text-gray-700">
+                    {{ formatTime(appt.startTime) }}
+                  </td>
+
+                  <td class="px-4 py-3 text-sm text-gray-700">
+                    {{ appt.appointmentType }}
+                  </td>
+
+                  <td class="px-4 py-3">
+                    <span [class]="'text-xs font-semibold px-3 py-1 rounded-full ' + statusClass(appt.status)">
+                      {{ appt.status }}
+                    </span>
+                  </td>
+
+                  <!-- ── Action: cancel icon only, visible only for Scheduled ── -->
+                  <td class="px-4 py-3">
+                    @if (appt.status === 'Scheduled') {
+                      <button
+                        (click)="cancelAppointment(appt.appointmentID)"
+                        title="Cancel appointment"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg
+                               text-gray-400 hover:text-red-500 hover:bg-red-50
+                               transition-colors">
+                        <!--
+                          Cancel / block icon (circle with a slash through it)
+                          Inline SVG — never shows as raw text, works with no font dependency
+                        -->
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                        </svg>
+                      </button>
+                    } @else {
+                      <!-- No action available for Completed / Cancelled -->
+                      <span class="text-gray-300 text-xs">—</span>
+                    }
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+    </main>
+  </div>
+</div>

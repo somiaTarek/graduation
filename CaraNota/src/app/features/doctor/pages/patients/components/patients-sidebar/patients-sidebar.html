@@ -1,0 +1,43 @@
+<div class="sidebar">
+  <h2 class="sidebar-title">patients</h2>
+
+  <div class="search-box">
+    <svg class="search-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+    </svg>
+    <input
+      type="text"
+      placeholder="search patient"
+      [(ngModel)]="searchQuery"
+      (input)="onSearch()"
+      class="search-input"
+    />
+  </div>
+
+  <div class="patient-list">
+    @for (patient of filteredPatients; track patient.id) {
+      <div
+        class="patient-item"
+        [class.selected]="patient.id === selectedPatientId"
+        (click)="selectPatient(patient)">
+        <div class="avatar">{{ patient.initials }}</div>
+        <div class="patient-info">
+          <span class="patient-name">{{ patient.fullName }}</span>
+          <span class="patient-meta">{{ patient.age }}y . {{ patient.gender | titlecase }}</span>
+          <span class="patient-id">{{ patient.id }}</span>
+        </div>
+      </div>
+    }
+
+    @if (filteredPatients.length === 0) {
+      <p class="no-results">No patients found</p>
+    }
+  </div>
+
+  <a routerLink="/doctor" class="go-home">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Go to home page
+  </a>
+</div>

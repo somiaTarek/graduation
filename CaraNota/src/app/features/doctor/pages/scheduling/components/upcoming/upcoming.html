@@ -1,0 +1,98 @@
+<!-- components/upcoming/upcoming.html -->
+<div class="flex flex-col gap-3 h-full">
+
+  <!-- Next Appointment Hero Card -->
+  @if (nextAppointment) {
+    <div class="bg-[#6B9FD4] rounded-2xl p-4 text-white shadow-md">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-white/30 flex items-center
+                    justify-center text-lg font-bold shrink-0">
+          {{ getInitials(nextAppointment.patientName) }}
+        </div>
+        <div>
+          <p class="text-xs font-medium text-blue-100 uppercase tracking-wide">
+            Next Up
+          </p>
+          <p class="font-semibold text-sm leading-tight">
+            {{ nextAppointment.patientName }}
+          </p>
+          <p class="text-lg font-bold mt-0.5">
+            {{ formatTime(nextAppointment.startTime) }}
+          </p>
+          <p class="text-xs text-blue-100 mt-0.5">
+            {{ nextAppointment.appointmentType }}
+          </p>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="bg-[#EEF4FB] rounded-2xl p-4 text-center">
+      <p class="text-sm text-gray-400">No upcoming appointments today</p>
+    </div>
+  }
+
+  <!-- Upcoming List -->
+  <div class="flex-1">
+    <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2 px-1">
+      Upcoming appointments
+    </p>
+
+    @if (upcomingList.length === 0) {
+      <p class="text-xs text-gray-400 px-1">No more appointments today.</p>
+    }
+
+    <div class="flex flex-col gap-2">
+      @for (apt of upcomingList; track apt.appointmentID; let i = $index) {
+        <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5
+                    transition hover:bg-[#ddeaf8] cursor-pointer group">
+
+          <!-- Avatar -->
+          <div class="w-9 h-9 rounded-full flex items-center justify-center
+                      text-white text-xs font-bold shrink-0"
+               [style.background]="getAvatarColor(i)">
+            {{ getInitials(apt.patientName) }}
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="text-[13px] font-semibold text-gray-700 leading-tight truncate">
+              {{ formatTime(apt.startTime) }} – {{ apt.patientName }}
+            </p>
+            <p class="text-[11px] text-gray-400 leading-tight">
+              {{ apt.appointmentType }}
+            </p>
+          </div>
+
+          <!-- Status badge or cancel button -->
+          @if (apt.status === 'Cancelled') {
+            <span class="text-[10px] font-bold text-red-400 uppercase tracking-wide shrink-0">
+              Cancelled
+            </span>
+          } @else {
+            <button
+              (click)="onCancel(apt.appointmentID)"
+              class="text-[10px] font-bold text-gray-300 uppercase tracking-wide
+                     shrink-0 opacity-0 group-hover:opacity-100 transition
+                     hover:text-red-400">
+              Cancel
+            </button>
+          }
+
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Back to home -->
+  <div class="mt-auto pt-2">
+    <button class="flex items-center gap-1.5 text-sm text-gray-500
+                   hover:text-[#6B9FD4] transition font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor"
+           stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Go to home page
+    </button>
+  </div>
+
+</div>

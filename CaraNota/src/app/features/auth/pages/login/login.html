@@ -1,123 +1,159 @@
 <!-- login.component.html -->
-<div class="flex min-h-screen">
 
-  <!-- ── Left panel ── -->
-  <div class="hidden lg:flex w-1/2 bg-slate-900 flex-col justify-between p-12 relative overflow-hidden">
-    <!-- decorative circle -->
-    <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full border border-teal-500/20"></div>
+<!-- Root wrapper: full screen, two columns side by side -->
+<div class="flex min-h-screen w-full">
 
-    <!-- logo -->
-    <div class="flex items-center gap-3 z-10">
-      <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
-        <span class="material-icons text-white text-lg">medical_services</span>
-      </div>
+  <!-- ═══════════════════════════════════════════
+       LEFT PANEL — dark navy, hidden on mobile
+  ════════════════════════════════════════════ -->
+  <div class="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative overflow-hidden"
+       style="background-color: #0f1f3d; min-height: 100vh;">
+
+    <!-- Decorative background circles -->
+    <div style="position:absolute; top:-80px; right:-80px; width:288px; height:288px;
+                border-radius:50%; border:1px solid rgba(255,255,255,0.08);"></div>
+    <div style="position:absolute; top:40px; right:-40px; width:160px; height:160px;
+                border-radius:50%; border:1px solid rgba(255,255,255,0.04);"></div>
+    <div style="position:absolute; bottom:-64px; left:-64px; width:256px; height:256px;
+                border-radius:50%; border:1px solid rgba(255,255,255,0.04);"></div>
+
+    <!-- Logo -->
+      <div class="flex items-center gap-3 z-10">
+  <img src="images/CareNota.png"
+       alt="CareNota"
+       class="w-50 h-50 object-contain "
+       style="filter: brightness(1.2)  ">
     </div>
 
-    <!-- hero -->
-    <div class="z-10">
-      <p class="text-teal-400 text-xs font-medium uppercase tracking-widest mb-4">AI Clinical Documentation</p>
-      <h1 class="text-white text-4xl font-bold leading-tight mb-4">
-        Smart care,<br>
-        <span class="text-teal-400 italic">less paperwork</span>
+
+    <!-- Hero text -->
+    <div style="z-index:10;">
+      <p class="text-xs font-semibold uppercase mb-5"
+         style="color:#60a5fa; letter-spacing:0.15em;">AI Clinical Documentation</p>
+      <h1 class="text-white font-bold leading-tight mb-5" style="font-size:2.25rem;">
+        Your care,<br>
+        <span style="color:#60a5fa; font-style:italic;">Now in Notes</span>
       </h1>
-      <p class="text-slate-400 text-sm leading-relaxed max-w-xs">
+      <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.55); max-width:280px;">
         Real-time transcription and AI-generated summaries — built for clinics across Egypt.
       </p>
     </div>
 
-    <!-- badges -->
-    <div class="flex gap-2 z-10">
-      <span class="text-xs font-medium px-3 py-1.5 rounded-full border border-white/10 text-white/60">Privacy-first</span>
-      <span class="text-xs font-medium px-3 py-1.5 rounded-full border border-white/10 text-white/60">Arabic support</span>
-      <span class="text-xs font-medium px-3 py-1.5 rounded-full border border-white/10 text-white/60">Offline-ready</span>
-    </div>
+    <!-- Spacer to push hero to middle -->
+    <div style="opacity:0; user-select:none;">_</div>
   </div>
 
-  <!-- ── Right panel ── -->
-  <div class="flex-1 bg-white flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12">
 
-    <!-- header -->
-    <div class="mb-8">
-      <h2 class="text-3xl font-bold text-slate-900 mb-1">Welcome back</h2>
-      <p class="text-sm text-slate-500">{{ roleSubtitle }}</p>
-    </div>
+  <!-- ═══════════════════════════════════════════
+       RIGHT PANEL — white, login form
+  ════════════════════════════════════════════ -->
+  <div class="flex flex-1 flex-col justify-center items-start overflow-y-auto"
+       style="background:#ffffff; padding: 3rem 5rem; min-height:100vh;">
 
-    <!-- role selector -->
-    <p class="text-xs font-medium uppercase tracking-widest text-slate-400 mb-3">I am a</p>
-    <div class="grid grid-cols-3 gap-2 mb-7">
-      <div
-        *ngFor="let r of roles"
-        (click)="selectRole(r.key)"
-        [ngClass]="getRoleCardClass(r.key)"
-        class="border-2 rounded-xl p-3 text-center cursor-pointer transition-all duration-150 flex flex-col items-center gap-1.5">
-        <span class="material-icons text-2xl">{{ r.icon }}</span>
-        <span class="text-xs font-medium">{{ r.label }}</span>
-      </div>
-    </div>
+    <div class="w-full" style="max-width: 500px;">
 
-    <!-- form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-
-      <!-- email -->
-      <div class="mb-4">
-        <label class="block text-xs font-medium text-slate-700 mb-1.5">Email address</label>
-        <input
-          type="email"
-          formControlName="email"
-          placeholder="you@clinic.com"
-          class="w-full h-11 px-4 text-sm border-2 rounded-xl outline-none transition-all duration-150
-                 border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 placeholder:text-slate-300"
-          [class.border-red-400]="email.invalid && email.touched">
-        <p class="text-xs text-red-500 mt-1" *ngIf="email.touched && email.hasError('required')">Email is required</p>
-        <p class="text-xs text-red-500 mt-1" *ngIf="email.touched && email.hasError('email')">Enter a valid email</p>
+      <!-- Heading -->
+      <div class="mb-8">
+        <h2 class="font-bold mb-1" style="font-size:1.875rem; color:#0f1f3d;">Welcome back</h2>
+        <p class="text-sm" style="color:#9ca3af;">Sign in to continue to CareNota</p>
       </div>
 
-      <!-- password -->
-      <div class="mb-2">
-        <label class="block text-xs font-medium text-slate-700 mb-1.5">Password</label>
-        <div class="relative">
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <!-- Email -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium mb-1.5" style="color:#374151;">
+            Email address
+          </label>
           <input
-            [type]="showPassword ? 'text' : 'password'"
-            formControlName="password"
-            placeholder="Enter your password"
-            class="w-full h-11 px-4 pr-11 text-sm border-2 rounded-xl outline-none transition-all duration-150
-                   border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 placeholder:text-slate-300"
-            [class.border-red-400]="password.invalid && password.touched">
-          <button type="button" (click)="showPassword = !showPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-            <span class="material-icons text-lg">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-          </button>
+            type="email"
+            formControlName="email"
+            placeholder="you@clinic.com"
+            style="width:100%; height:44px; padding:0 1rem; font-size:0.875rem;
+                   border:1.5px solid #d1d5db; border-radius:8px; outline:none;
+                   transition:border 0.15s, box-shadow 0.15s;"
+            [style.border-color]="email.invalid && email.touched ? '#f87171' : ''"
+            class="focus:border-blue-600 focus:ring-0 placeholder:text-gray-300">
+          <p class="text-xs mt-1" style="color:#ef4444;"
+             *ngIf="email.touched && email.hasError('required')">Email is required</p>
+          <p class="text-xs mt-1" style="color:#ef4444;"
+             *ngIf="email.touched && email.hasError('email')">Enter a valid email</p>
         </div>
-        <p class="text-xs text-red-500 mt-1" *ngIf="password.touched && password.hasError('required')">Password is required</p>
-      </div>
 
-      <!-- forgot -->
-      <div class="text-right mb-5">
-        <a routerLink="/auth/forgot-password" class="text-xs font-medium text-teal-600 hover:text-teal-700">Forgot password?</a>
-      </div>
+        <!-- Password -->
+        <div class="mb-2">
+          <label class="block text-sm font-medium mb-1.5" style="color:#374151;">
+            Password
+          </label>
+          <div style="position:relative;">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              style="width:100%; height:44px; padding:0 2.75rem 0 1rem; font-size:0.875rem;
+                     border:1.5px solid #d1d5db; border-radius:8px; outline:none;
+                     transition:border 0.15s;"
+              [style.border-color]="password.invalid && password.touched ? '#f87171' : ''"
+              class="focus:border-blue-600 placeholder:text-gray-300">
+            <button type="button" (click)="showPassword = !showPassword"
+              style="position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                     background:none; border:none; cursor:pointer; color:#9ca3af; display:flex; align-items:center;">
+              <span class="material-icons" style="font-size:18px;">
+                {{ showPassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+          <p class="text-xs mt-1" style="color:#ef4444;"
+             *ngIf="password.touched && password.hasError('required')">Password is required</p>
+        </div>
 
-      <!-- error banner -->
-      <div *ngIf="errorMessage" class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
-        <span class="material-icons text-red-500 text-base">error_outline</span>
-        <span class="text-sm text-red-600">{{ errorMessage }}</span>
-      </div>
+        <!-- Forgot password -->
+        <div class="text-right mb-6">
+          <a routerLink="/auth/forgot-password"
+             class="text-xs font-medium"
+             style="color:#2563eb;">Forgot password?</a>
+        </div>
 
-      <!-- submit -->
-      <button
-        type="submit"
-        [disabled]="isLoading"
-        [ngClass]="getSubmitBtnClass()"
-        class="w-full h-11 rounded-xl text-white text-sm font-medium transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed">
-        <span *ngIf="!isLoading">Sign in as {{ selectedRole | titlecase }}</span>
-        <span *ngIf="isLoading" class="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-      </button>
+        <!-- Error banner -->
+        <div *ngIf="errorMessage"
+             class="flex items-center gap-2 mb-4"
+             style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px;">
+          <span class="material-icons" style="color:#ef4444; font-size:18px;">error_outline</span>
+          <span class="text-sm" style="color:#dc2626;">{{ errorMessage }}</span>
+        </div>
 
-    </form>
+        <!-- Submit button -->
+        <button
+          type="submit"
+          [disabled]="isLoading"
+          class="flex items-center justify-center w-full font-semibold text-white transition-all"
+          style="height:44px; border-radius:8px; font-size:0.875rem; border:none; cursor:pointer;
+                 background:#1d4ed8;"
+          onmouseover="this.style.background='#1e40af'"
+          onmouseout="this.style.background='#1d4ed8'">
+          <span *ngIf="!isLoading">Sign in</span>
+          <span *ngIf="isLoading"
+                style="width:20px; height:20px; border:2px solid rgba(255,255,255,0.3);
+                       border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block;">
+          </span>
+        </button>
 
-    <p class="text-center text-sm text-slate-400 mt-6">
-      Don't have an account?
-      <a routerLink="/auth/register" class="text-teal-600 font-medium hover:text-teal-700">Contact your administrator</a>
-    </p>
+      </form>
 
+      <!-- Register link -->
+      <p class="text-sm mt-6" style="color:#9ca3af;">
+        Don't have an account?
+        <a routerLink="/auth/register"
+           class="font-medium"
+           style="color:#2563eb;">Please register</a>
+      </p>
+
+    </div>
   </div>
 </div>
+
+<!-- Spinner keyframes -->
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>

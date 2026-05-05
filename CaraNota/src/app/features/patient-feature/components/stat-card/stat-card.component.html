@@ -1,0 +1,8 @@
+<!-- src/app/features/patient/components/stat-card/stat-card.component.html -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1">
+  <p class="text-xs text-gray-400 font-medium">{{ label }}</p>
+  <p class="text-3xl font-bold text-gray-900">{{ value }}</p>
+  @if (sub) {
+    <p class="text-xs text-gray-400 mt-1">{{ sub }}</p>
+  }
+</div>

@@ -1,0 +1,79 @@
+<div class="min-h-screen bg-gray-100 font-sans">
+  <app-doctor-navbar />
+
+  <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- Hero Banner -->
+    <div class="relative bg-navy rounded-3xl overflow-hidden h-72 flex items-end p-8">
+      <!-- Big background text -->
+      <span class="absolute inset-0 flex items-center justify-center
+        text-[9rem] font-extrabold text-white/10 tracking-tight select-none pointer-events-none">
+        Healthcare
+      </span>
+
+      <!-- Left text -->
+      <div class="relative z-10">
+        <p class="text-white font-bold text-lg uppercase leading-snug tracking-wide">
+          Spend more time<br>with patients, not<br>paperwork.
+        </p>
+      </div>
+
+      <!-- CTA Button -->
+      <div class="relative z-10 ml-auto">
+        <a routerLink="/doctor/today-visits"
+   class="flex items-center gap-3 bg-white/10 border border-white/30 backdrop-blur-sm
+          text-white font-semibold px-6 py-3 rounded-full hover:bg-white hover:text-navy
+          transition-all duration-300 group">
+  Start Vist
+  <span class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center
+               group-hover:bg-navy group-hover:text-white transition-all">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  </span>
+</a>
+
+
+      </div>
+    </div>
+
+    <!-- Cards Row -->
+    <div class="grid grid-cols-2 gap-6">
+
+      <!-- Scheduling Card -->
+      <div class="bg-sky-card rounded-3xl p-6 flex flex-col gap-6 border border-sky-200">
+        <div>
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full">
+            Schedule
+          </span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 text-center">Scheduling</h2>
+        <div class="flex justify-center">
+          <a routerLink="/doctor/scheduling"
+            class="bg-navy text-white font-semibold px-8 py-3 rounded-full text-sm
+                   hover:bg-navy-dark transition-colors shadow-md">
+            Show Schedule
+          </a>
+        </div>
+      </div>
+
+      <!-- Patients Card -->
+      <div class="bg-sky-card rounded-3xl p-6 flex flex-col gap-6 border border-sky-200">
+        <div>
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full">
+            Patients
+          </span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 text-center">Patients</h2>
+        <div class="flex justify-center">
+          <a routerLink="/doctor/patients"
+            class="bg-navy text-white font-semibold px-8 py-3 rounded-full text-sm
+                   hover:bg-navy-dark transition-colors shadow-md">
+            Show Patient
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

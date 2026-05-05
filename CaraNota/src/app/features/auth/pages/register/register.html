@@ -1,0 +1,53 @@
+<!-- register.component.html -->
+<div class="flex min-h-screen h-full">
+
+  <!-- ── Left panel ── -->
+  <div class="hidden lg:flex w-5/12 flex-col justify-between p-12 relative overflow-hidden min-h-screen"
+       style="background: #0f1f3d;">
+    <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full border border-white/10"></div>
+    <div class="absolute top-10 -right-10 w-40 h-40 rounded-full border border-white/5"></div>
+    <div class="absolute -bottom-16 -left-16 w-64 h-64 rounded-full border border-white/5"></div>
+
+    <!-- logo -->
+    <div class="flex items-center gap-3 z-10">
+  <img src="images/CareNota.png"
+       alt="CareNota"
+       class="w-50 h-50 object-contain "
+       style="filter: brightness(1.2)  ">
+    </div>
+
+    <!-- hero -->
+    <div class="z-10">
+      <p class="text-blue-400 text-xs font-semibold uppercase tracking-widest mb-5">AI Clinical Documentation</p>
+      <h1 class="text-white text-4xl font-bold leading-tight mb-5">
+        Your care,<br>
+        <span class="text-blue-400 italic">Now in Notes</span>
+      </h1>
+      <p class="text-white/60 text-sm leading-relaxed max-w-xs">
+        Real-time transcription and AI-generated summaries — built for clinics across Egypt.
+      </p>
+    </div>
+
+    <div class="z-10 opacity-0 select-none">_</div>
+  </div>
+
+  <!-- ── Right panel ── -->
+  <div class="flex-1 bg-white flex flex-row  justify-center px-8 sm:px-14 lg:px-20 py-12 min-h-screen overflow-y-auto">
+    <div class="max-w-sm w-full"  style="max-width: 500px">
+
+      <app-account-form
+        [submitLabel]="'Register'"
+        [isLoading]="isLoading"
+        [errorMessage]="errorMessage"
+        [showRoleField]="false"
+        (formSubmit)="onRegister($event)">
+      </app-account-form>
+
+      <p class="text-sm text-gray-400 mt-5 text-center">
+        Already have an account?
+        <a routerLink="/auth/login" class="text-blue-600 font-medium hover:text-blue-800">Sign in here</a>
+      </p>
+
+    </div>
+  </div>
+</div>
