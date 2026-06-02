@@ -1,4 +1,14 @@
-// src/app/core/services/appointment.service.ts
+// core/services/appointment.service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// Covers all endpoints under /api/Appointment (lowercase api, capital A in path)
+//
+// FIXES vs previous version:
+//   ✅ baseUrl now correctly set to /api/Appointment (was just apiUrl — caused 404s)
+//   ✅ getByDateRange — removed double-prefix bug
+//   ✅ cancelAppointment — removed double-prefix bug
+//   ✅ All methods now use API constants instead of raw strings
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -9,125 +19,95 @@ import {
   AppointmentStatus,
   TimeSlot,
 } from '../models/appointment.model';
-import { environment } from '../../../environments/environment';
+import { API } from '../constants/api';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private http = inject(HttpClient);
 
-  // NOTE: capital A in Appointment — backend is case-sensitive
-private baseUrl = environment.apiUrl;
-  // ── Create ────────────────────────────────────────────────────────────
+  // ── Create ────────────────────────────────────────────────────────────────
+  createAppointment(dto: CreateAppointmentDto): Observable<Appointment> {
+    return this.http.post<Appointment>(API.APPOINTMENT.LIST, dto);
+  }
 
-// ── Create ────────────────────────────────────────────────────────────
-
-createAppointment(dto: CreateAppointmentDto): Observable<Appointment> {
-  const url = `${environment.apiUrl}/api/Appointment`;
-
-  console.log('[CreateAppointment] Sending to URL:', url);
-  console.log('[CreateAppointment] Payload:', dto);
-
-  return this.http.post<Appointment>(url, dto);
-}
-
-  // ── Read ──────────────────────────────────────────────────────────────
+  // ── Read ──────────────────────────────────────────────────────────────────
+  getAll(): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(API.APPOINTMENT.LIST);
+  }
 
   getAppointmentById(id: number): Observable<Appointment> {
-    return this.http.get<Appointment>(`${this.baseUrl}/${id}`);
+    return this.http.get<Appointment>(API.APPOINTMENT.BY_ID(id));
   }
 
   getAppointmentDetails(id: number): Observable<Appointment> {
-    return this.http.get<Appointment>(`${this.baseUrl}/${id}/details`);
+    return this.http.get<Appointment>(API.APPOINTMENT.DETAILS(id));
   }
 
   getByPatient(patientId: number): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.baseUrl}/patient/${patientId}`);
+    return this.http.get<Appointment[]>(API.APPOINTMENT.BY_PATIENT(patientId));
   }
 
   getByDoctor(doctorId: number): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.baseUrl}/doctor/${doctorId}`);
+    return this.http.get<Appointment[]>(API.APPOINTMENT.BY_DOCTOR(doctorId));
   }
 
   getByStatus(status: AppointmentStatus): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.baseUrl}/status/${status}`);
+    return this.http.get<Appointment[]>(API.APPOINTMENT.BY_STATUS(status));
   }
 
-  // Used for today's visits: pass today 00:00 → 23:59 in ISO UTC
-getByDateRange(from: Date, to: Date) {
-  return this.http.get<Appointment[]>(
-    `${this.baseUrl}/api/Appointment/date-range`,
-    {
+  // GET /api/Appointment/date-range?from=&to=
+  getByDateRange(from: Date, to: Date): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(API.APPOINTMENT.DATE_RANGE, {
       params: {
         from: from.toISOString(),
-        to: to.toISOString()
+        to:   to.toISOString(),
       },
+    });
+  }
 
-    }
-  );
-}
-
-  // Doctor weekly schedule — used in scheduling page
+  // GET /api/Appointment/doctor/{id}/weekly?startOfWeek=
   getDoctorWeekly(doctorId: number, startOfWeek: Date): Observable<Appointment[]> {
     const params = new HttpParams().set('startOfWeek', startOfWeek.toISOString());
-    return this.http.get<Appointment[]>(
-      `${this.baseUrl}/doctor/${doctorId}/weekly`, { params }
-    );
+    return this.http.get<Appointment[]>(API.APPOINTMENT.DOCTOR_WEEKLY(doctorId), { params });
   }
 
-  // Available booking slots — used in Create Appointment modal
-// Available booking slots — used in Create Appointment modal
-getAvailableSlots(doctorId: number, date: Date): Observable<TimeSlot[]> {
-  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+  // GET /api/Appointment/doctor/{id}/available-slots?date=YYYY-MM-DD
+  getAvailableSlots(doctorId: number, date: Date): Observable<TimeSlot[]> {
+    const dateStr = date.toISOString().split('T')[0];
+    return this.http.get<TimeSlot[]>(API.APPOINTMENT.AVAILABLE_SLOTS(doctorId), {
+      params: { date: dateStr },
+    });
+  }
 
-  return this.http.get<TimeSlot[]>(
-    `${environment.apiUrl}/api/Appointment/doctor/${doctorId}/available-slots`,
-    {
-      params: { date: dateStr }
-    }
-  );
-}
-
-  // ── Update ────────────────────────────────────────────────────────────
-
+  // ── Update ────────────────────────────────────────────────────────────────
   updateAppointment(id: number, dto: UpdateAppointmentDto): Observable<Appointment> {
-    return this.http.put<Appointment>(`${this.baseUrl}/${id}`, dto);
+    return this.http.put<Appointment>(API.APPOINTMENT.BY_ID(id), dto);
   }
 
+  // PUT /api/Appointment/{id}/cancel  (no body needed)
   cancelAppointment(id: number): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/api/Appointment/${id}/cancel`, {});
+    return this.http.put<void>(API.APPOINTMENT.CANCEL(id), {});
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────
-
+  // ── Delete ────────────────────────────────────────────────────────────────
   deleteAppointment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(API.APPOINTMENT.BY_ID(id));
   }
 
-  // ── Utility ───────────────────────────────────────────────────────────
-
-  // Returns today's date range [start, end] in UTC — used by today-visits page
+  // ── Utility ───────────────────────────────────────────────────────────────
   getTodayRange(): { from: Date; to: Date } {
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
+    const from = new Date(); from.setHours(0, 0, 0, 0);
+    const to   = new Date(); to.setHours(23, 59, 59, 999);
     return { from, to };
   }
 
-  // Converts UTC ISO string to local display string
   toLocalTime(utcString: string): string {
-    return new Date(utcString).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(utcString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   toLocalDate(utcString: string): string {
     return new Date(utcString).toLocaleDateString([], {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
   }
 }

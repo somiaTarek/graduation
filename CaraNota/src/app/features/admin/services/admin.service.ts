@@ -1,23 +1,28 @@
-// src/app/features/admin/services/admin.service.ts
+// features/admin/services/admin.service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// CHANGES vs previous version:
+//   ✅ Uses API constants
+//   ✅ updateAdminProfile typed properly with UpdateAdminProfileDto
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, map } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import {
-  AdminProfile,           // ← was missing
-  ChangePasswordDto,      // ← was missing
+  AdminProfile,
+  ChangePasswordDto,
   DoctorProfile,
   ReceptionistProfile,
   CreateDoctorRequest,
   CreateReceptionistRequest,
   CreateStaffResponse,
+  UpdateAdminProfileDto,
   AdminStats,
 } from '../models/admin.model';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { PatientService } from '../../../core/services/patient.service';
 import { Doctor } from '../../../core/models/appointment.model';
-
+import { API } from '../../../core/constants/api';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -25,134 +30,118 @@ export class AdminService {
   private doctorService  = inject(DoctorService);
   private patientService = inject(PatientService);
 
-  private base = environment.apiUrl;
-
-
-  // ── Doctors ────────────────────────────────────────────────────────────────
-
-
-  // ── Unified Create Staff (called by CreateUserComponent) ─────────────────
+  // ── Unified create staff (called by CreateUserComponent) ─────────────────
   createStaff(payload: any): Observable<CreateStaffResponse> {
     if (payload.role === 'doctor') {
       return this.createDoctor({
-        fullName: payload.fullName,
-        email: payload.email,
-        password: payload.password,
+        fullName:    payload.fullName,
+        email:       payload.email,
+        password:    payload.password,
         phoneNumber: payload.phoneNumber,
-        specialty: payload.specialty,        // ← map from form
-        licenseNumber: payload.licenseNumber || undefined,
+        specialty:   payload.specialty,
       });
     } else {
       return this.createReceptionist({
-        fullName: payload.fullName,
-        email: payload.email,
-        password: payload.password,
+        fullName:    payload.fullName,
+        email:       payload.email,
+        password:    payload.password,
         phoneNumber: payload.phoneNumber,
       });
     }
   }
 
-getAllDoctors(): Observable<DoctorProfile[]> {
-  return this.doctorService.getAllDoctors().pipe(
-    map(doctors => doctors.map(d => ({
-      id: d.id,
-      fullName: d.fullName,
-      email: d.email,
-      specialty: d.specialty,
-      phoneNumber: d.phoneNumber
-    })))
-  );
-}
+  // ── Doctors ───────────────────────────────────────────────────────────────
 
-getDoctorById(id: number): Observable<DoctorProfile> {
-  return this.doctorService.getDoctorById(id).pipe(
-    map((doctor: Doctor) => ({
-      id: doctor.id,
-      fullName: doctor.fullName,
-      email: doctor.email,
-      specialty: doctor.specialty,        // ← important
-      phoneNumber: doctor.phoneNumber
-    }))
-  );
-}
-
-deleteDoctor(id: number): Observable<void> {   // ← back to number
-  return this.http.delete<void>(`${this.base}/api/Doctor/${id}`);
-}
-
-  // ── Receptionists ──────────────────────────────────────────────────────────
-  // ⚠️  GET and DELETE receptionist endpoints are NOT in the PDF docs.
-  //     Ask the backend team for the correct URLs before using these.
-
-  getAllReceptionists(): Observable<ReceptionistProfile[]> {
-    return this.http.get<ReceptionistProfile[]>(`${this.base}/api/admin/receptionists`);
+  getAllDoctors(): Observable<DoctorProfile[]> {
+    return this.doctorService.getAllDoctors().pipe(
+      map(doctors => doctors.map(d => ({
+        id:          d.id,
+        fullName:    d.fullName,
+        email:       d.email,
+        specialty:   d.specialty,
+        phoneNumber: d.phoneNumber,
+      })))
+    );
   }
 
-deleteReceptionist(id: number): Observable<void> {
-  return this.http.delete<void>(`${this.base}/api/admin/receptionists/${id}`);
-}
+  getDoctorById(id: number): Observable<DoctorProfile> {
+    return this.doctorService.getDoctorById(id).pipe(
+      map((doctor: Doctor) => ({
+        id:          doctor.id,
+        fullName:    doctor.fullName,
+        email:       doctor.email,
+        specialty:   doctor.specialty,
+        phoneNumber: doctor.phoneNumber,
+      }))
+    );
+  }
 
-  // ── Create staff ───────────────────────────────────────────────────────────
-  // Per the Admin API PDF (v1.0), doctors and receptionists are created through
-  // dedicated endpoints under /api/admin — NOT via /Api/Auth/Register.
-  // These endpoints immediately activate the account with no email confirmation.
+  deleteDoctor(id: number): Observable<void> {
+    return this.http.delete<void>(API.DOCTOR.BY_ID(id));
+  }
+
+  // ── Receptionists ─────────────────────────────────────────────────────────
+
+  getAllReceptionists(): Observable<ReceptionistProfile[]> {
+    return this.http.get<ReceptionistProfile[]>(API.ADMIN.RECEPTIONISTS);
+  }
+
+  deleteReceptionist(id: number): Observable<void> {
+    return this.http.delete<void>(API.ADMIN.RECEPTIONIST_BY_ID(id));
+  }
+
+  // ── Create staff ──────────────────────────────────────────────────────────
 
   createDoctor(payload: CreateDoctorRequest): Observable<CreateStaffResponse> {
-    return this.http.post<CreateStaffResponse>(
-      `${this.base}/api/admin/create-doctor`,
-      {
-        fullName:        payload.fullName,
-        email:           payload.email,
-        password:        payload.password,
-        phoneNumber:     payload.phoneNumber,
-        specialty:  payload.specialty,  // ← PDF field name, not "specialty"
-        licenseNumber:   payload.licenseNumber,   // optional
-      }
-    );
+    return this.http.post<CreateStaffResponse>(API.ADMIN.CREATE_DOCTOR, {
+      fullName:    payload.fullName,
+      email:       payload.email,
+      password:    payload.password,
+      phoneNumber: payload.phoneNumber,
+      specialty:   payload.specialty,
+    });
   }
 
   createReceptionist(payload: CreateReceptionistRequest): Observable<CreateStaffResponse> {
-    return this.http.post<CreateStaffResponse>(
-      `${this.base}/api/admin/create-receptionist`,
-      {
-        fullName:    payload.fullName,
-        email:       payload.email,
-        password:    payload.password,
-        phoneNumber: payload.phoneNumber,
-      }
-    );
+    return this.http.post<CreateStaffResponse>(API.ADMIN.CREATE_RECEPTIONIST, {
+      fullName:    payload.fullName,
+      email:       payload.email,
+      password:    payload.password,
+      phoneNumber: payload.phoneNumber,
+    });
   }
 
-  // ── Patients ───────────────────────────────────────────────────────────────
+  // ── Patients ──────────────────────────────────────────────────────────────
 
   deletePatient(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/Patient/${id}`);
+    return this.http.delete<void>(API.PATIENT.BY_ID(id));
   }
 
-  // ── Admin self-management ──────────────────────────────────────────────────
+  // ── Admin self-management ─────────────────────────────────────────────────
 
   getAdminProfile(): Observable<AdminProfile> {
-    return this.http.get<AdminProfile>(`${this.base}/api/admin/profile`);
+    return this.http.get<AdminProfile>(API.ADMIN.PROFILE);
   }
 
-  updateAdminProfile(dto: unknown): Observable<unknown> {
-    return this.http.put(`${this.base}/api/admin/profile`, dto);
+  updateAdminProfile(dto: UpdateAdminProfileDto): Observable<void> {
+    return this.http.put<void>(API.ADMIN.PROFILE, dto);
   }
-// admin.service.ts
-changeAdminPassword(dto: ChangePasswordDto): Observable<void> {
-  return this.http.put<void>(`${this.base}/api/admin/change-password`, dto);
-}
 
-  // ── Dashboard stats ────────────────────────────────────────────────────────
+  changeAdminPassword(dto: ChangePasswordDto): Observable<void> {
+    return this.http.put<void>(API.ADMIN.CHANGE_PASSWORD, dto);
+  }
+
+  // ── Dashboard stats ───────────────────────────────────────────────────────
 
   getStats(): Observable<AdminStats> {
     return forkJoin({
-      doctors:  this.getAllDoctors(),
-      patients: this.patientService.getAll(),
+      doctors:       this.getAllDoctors(),
+      patients:      this.patientService.getAll(),
+      receptionists: this.getAllReceptionists(),
     }).pipe(
-      map(({ doctors, patients }) => ({
+      map(({ doctors, patients, receptionists }) => ({
         totalDoctors:       doctors.length,
-        totalReceptionists: 0,   // update when backend exposes the list endpoint
+        totalReceptionists: receptionists.length,
         totalPatients:      patients.length,
       }))
     );

@@ -1,18 +1,12 @@
-// src/app/core/services/summary.service.ts
+// core/services/summary.service.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Covers all endpoints under /api/visits/{visitId}/summary  (lowercase)
+// Covers /api/visits/{visitId}/summary endpoints.
 //
-// API used:
-//   GET   /api/visits/{visitId}/summary          → getSummary()
-//   PUT   /api/visits/{visitId}/summary          → editSummary()
-//   POST  /api/visits/{visitId}/summary/approve  → approveSummary()
-//   POST  /api/visits/{visitId}/summary/rating   → submitRating()
-//
-// ⚠️ Notes from API docs:
-//   - /approve and /rating use the SAME body { rating: float } — likely the same
-//     operation. Use approveSummary() to approve + rate in one call.
-//   - DELETE /api/visits/{visitId}/summary does NOT exist.
-//     Cannot discard/regenerate a summary once created.
+// BREAKING CHANGES vs previous version (confirmed in final swagger):
+//   ✅ approveSummary() body changed: was { rating: number } → { followUpDate?: string }
+//   ✅ submitRating() REMOVED — /summary/rating endpoint no longer exists
+//   ✅ editSummary() body now includes new `whenToSeekHelp` field
+//   ✅ getPatientSummary() ADDED — new GET /api/visits/{id}/patient-summary endpoint
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
@@ -22,38 +16,40 @@ import {
   VisitSummaryResponseDto,
   UpdateSummaryDto,
   ApproveSummaryDto,
+  PatientSummaryViewDto,
 } from '../models/appointment.model';
-import { environment } from '../../../environments/environment';
+import { API } from '../constants/api';
 
 @Injectable({ providedIn: 'root' })
 export class SummaryService {
   private http = inject(HttpClient);
-  // lowercase /api/visits — per API docs
-  private base = (visitId: number) =>
-    `${environment.apiUrl}/api/visits/${visitId}/summary`;
 
-  // ── Read ──────────────────────────────────────────────────────────────────
-  // Returns both doctor SOAP summary and patient-friendly summary
+  // GET /api/visits/{visitId}/summary
+  // Returns the full doctor + patient summary (used on doctor summary review page)
   getSummary(visitId: number): Observable<VisitSummaryResponseDto> {
-    return this.http.get<VisitSummaryResponseDto>(this.base(visitId));
+    return this.http.get<VisitSummaryResponseDto>(API.SUMMARY.BASE(visitId));
   }
 
-  // ── Update ────────────────────────────────────────────────────────────────
-  // Doctor can edit the AI-generated SOAP fields before approving
-  // Returns 204 No Content
+  // PUT /api/visits/{visitId}/summary
+  // Doctor edits AI-generated SOAP fields before approving.
+  // Body now also accepts `whenToSeekHelp` (new field in final swagger).
+  // Returns 204 No Content.
   editSummary(visitId: number, dto: UpdateSummaryDto): Observable<void> {
-    return this.http.put<void>(this.base(visitId), dto);
+    return this.http.put<void>(API.SUMMARY.BASE(visitId), dto);
   }
 
-  // ── Approve ───────────────────────────────────────────────────────────────
-  // Marks summary as approved and submits a rating (0–5)
+  // POST /api/visits/{visitId}/summary/approve
+  // Marks summary as approved.
+  // ⚠️ Body changed: was { rating: number 0–5 } → now { followUpDate?: string (ISO datetime) }
+  // followUpDate is optional — pass null or omit entirely if no follow-up is needed.
   approveSummary(visitId: number, dto: ApproveSummaryDto): Observable<void> {
-    return this.http.post<void>(`${this.base(visitId)}/approve`, dto);
+    return this.http.post<void>(API.SUMMARY.APPROVE(visitId), dto);
   }
 
-  // ── Rating only ───────────────────────────────────────────────────────────
-  // Same body as approve — use if you want to rate without re-approving
-  submitRating(visitId: number, dto: ApproveSummaryDto): Observable<void> {
-    return this.http.post<void>(`${this.base(visitId)}/rating`, dto);
+  // GET /api/visits/{visitId}/patient-summary
+  // ← NEW in final swagger — patient-facing read-only view of their visit summary.
+  // Use this on the patient dashboard / visit detail page.
+  getPatientSummary(visitId: number): Observable<PatientSummaryViewDto> {
+    return this.http.get<PatientSummaryViewDto>(API.SUMMARY.PATIENT_VIEW(visitId));
   }
 }

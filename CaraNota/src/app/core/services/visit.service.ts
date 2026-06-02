@@ -1,71 +1,60 @@
-// src/app/core/services/visit.service.ts
+// core/services/visit.service.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Covers all endpoints under /Api/Visit  (capital A — backend is case-sensitive)
+// Covers /Api/Visit endpoints (capital A — .NET routing).
 //
-// API used:
-//   POST   /Api/Visit                           → createVisit()
-//   GET    /Api/Visit/{Id}                      → getVisitById()
-//   GET    /Api/Visit/{Id}/Details              → getVisitDetails()
-//   GET    /Api/Visit/Patient/{PatientId}       → getVisitsByPatient()
-//   GET    /Api/Visit/Appointment/{AppointmentId} → getVisitByAppointment()
-//   PUT    /Api/Visit/{Id}                      → updateSoapNotes()
-//   DELETE /Api/Visit/{Id}                      → deleteVisit()
-//
-// ⚠️ Missing endpoint noted in API docs:
-//   GET /Api/Visit/Doctor/{DoctorId}  — does NOT exist yet.
-//   Ask backend team to add it if you need to list all visits for a doctor.
+// CHANGES vs previous version:
+//   ✅ Uses API constants
+//   ✅ updateSoapNotes() now accepts full UpdateVisitDto (includes whenToSeekHelp, followUpDate)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {
-  Visit,
-  CreateVisitDto,
-  UpdateVisitDto,
-} from '../models/appointment.model';
-import { environment } from '../../../environments/environment';
+import { Visit, CreateVisitDto, UpdateVisitDto } from '../models/appointment.model';
+import { API } from '../constants/api';
 
 @Injectable({ providedIn: 'root' })
 export class VisitService {
-  private http    = inject(HttpClient);
-  // ⚠️ Capital A — backend is case-sensitive
-  private baseUrl = `${environment.apiUrl}/Api/Visit`;
+  private http = inject(HttpClient);
 
-  // ── Create ────────────────────────────────────────────────────────────────
-  // Called by today-visit.ts when doctor clicks "Start Visit".
-  // Returns Visit with the real visitId used for audio upload + recording route.
+  // POST /Api/Visit
   createVisit(dto: CreateVisitDto): Observable<Visit> {
-    return this.http.post<Visit>(this.baseUrl, dto);
+    return this.http.post<Visit>(API.VISIT.LIST, dto);
   }
 
-  // ── Read ──────────────────────────────────────────────────────────────────
+  // GET /Api/Visit
+  getAllVisits(): Observable<Visit[]> {
+    return this.http.get<Visit[]>(API.VISIT.LIST);
+  }
+
+  // GET /Api/Visit/{Id}
   getVisitById(id: number): Observable<Visit> {
-    return this.http.get<Visit>(`${this.baseUrl}/${id}`);
+    return this.http.get<Visit>(API.VISIT.BY_ID(id));
   }
 
-  // Returns full SOAP notes + linked diagnoses/prescriptions/lab tests
+  // GET /Api/Visit/{Id}/Details
   getVisitDetails(id: number): Observable<Visit> {
-    return this.http.get<Visit>(`${this.baseUrl}/${id}/Details`);
+    return this.http.get<Visit>(API.VISIT.DETAILS(id));
   }
 
+  // GET /Api/Visit/Patient/{PatientId}
   getVisitsByPatient(patientId: number): Observable<Visit[]> {
-    return this.http.get<Visit[]>(`${this.baseUrl}/Patient/${patientId}`);
+    return this.http.get<Visit[]>(API.VISIT.BY_PATIENT(patientId));
   }
 
-  // Used after creating a visit to verify it was created correctly
+  // GET /Api/Visit/Appointment/{AppointmentId}
   getVisitByAppointment(appointmentId: number): Observable<Visit> {
-    return this.http.get<Visit>(`${this.baseUrl}/Appointment/${appointmentId}`);
+    return this.http.get<Visit>(API.VISIT.BY_APPOINTMENT(appointmentId));
   }
 
-  // ── Update ────────────────────────────────────────────────────────────────
-  // Only SOAP fields — visitDate and appointmentID are immutable after creation
+  // PUT /Api/Visit/{Id}
+  // ⚠️ Final swagger adds `whenToSeekHelp` and `followUpDate` to the body.
   updateSoapNotes(id: number, dto: UpdateVisitDto): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}`, dto);
+    return this.http.put<void>(API.VISIT.BY_ID(id), dto);
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
+  // DELETE /Api/Visit/{Id}
   deleteVisit(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(API.VISIT.BY_ID(id));
   }
 }

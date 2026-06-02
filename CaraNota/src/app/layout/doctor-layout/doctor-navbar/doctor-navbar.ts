@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { Doctor } from '../../../core/models/appointment.model';
 
 @Component({
   selector: 'app-doctor-navbar',
@@ -36,9 +37,9 @@ export class DoctorNavbar implements OnInit {
   ngOnInit(): void {
     // Load doctor info for initials — uses cached doctorId if already resolved
     try {
-      this.doctorService.resolveDoctorId().subscribe({
-        next: (doc) => {
-          this.doctorName.set(doc.fullName);
+this.doctorService.resolveDoctorProfile().subscribe({
+next: (doc: Doctor) => {
+            this.doctorName.set(doc.fullName);
           this.doctorId.set(doc.id);
           this.doctorInitials.set(
             doc.fullName.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()

@@ -1,98 +1,74 @@
-// src/app/core/services/patient.service.ts
+// core/services/patient.service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// CHANGES vs previous version:
+//   ✅ Uses API constants
+//   ✅ Removed USE_FAKE_DATA flag (set production-ready; add back locally if needed)
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, of, delay } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable, map } from 'rxjs';
 import {
   PatientViewModel,
   PatientVisit,
   PatientAppointment,
-  FAKE_PATIENTS,
 } from '../models/patient.model';
-
-const USE_FAKE_DATA = false; // ← flip to false when backend is ready
+import { API } from '../constants/api';
 
 @Injectable({ providedIn: 'root' })
 export class PatientService {
   private http = inject(HttpClient);
-  private base = `${environment.apiUrl}/api/Patient`;
-
-  // ── Read ──────────────────────────────────────────────────────────────
 
   // GET /api/Patient
   getAll(): Observable<PatientViewModel[]> {
-    if (USE_FAKE_DATA) return of(FAKE_PATIENTS).pipe(delay(300));
     return this.http
-      .get<any[]>(this.base)
+      .get<any[]>(API.PATIENT.LIST)
       .pipe(map(list => list.map(p => new PatientViewModel(p))));
   }
 
   // GET /api/Patient/{id}
   getById(id: number): Observable<PatientViewModel> {
-    if (USE_FAKE_DATA) {
-      const p = FAKE_PATIENTS.find(x => x.id === id) ?? FAKE_PATIENTS[0];
-      return of(p).pipe(delay(200));
-    }
     return this.http
-      .get<any>(`${this.base}/${id}`)
+      .get<any>(API.PATIENT.BY_ID(id))
       .pipe(map(p => new PatientViewModel(p)));
   }
 
   // GET /api/Patient/{id}/details
   getDetails(id: number): Observable<PatientViewModel> {
-    if (USE_FAKE_DATA) return this.getById(id);
     return this.http
-      .get<any>(`${this.base}/${id}/details`)
+      .get<any>(API.PATIENT.DETAILS(id))
       .pipe(map(p => new PatientViewModel(p)));
   }
 
-  // GET /api/Patient/search?name={name}
+  // GET /api/Patient/search?name=
   search(name: string): Observable<PatientViewModel[]> {
-    if (USE_FAKE_DATA) {
-      const q = name.toLowerCase();
-      return of(FAKE_PATIENTS.filter(p => p.fullName.toLowerCase().includes(q))).pipe(delay(150));
-    }
     return this.http
-      .get<any[]>(`${this.base}/search`, { params: { name } })
+      .get<any[]>(API.PATIENT.SEARCH, { params: { name } })
       .pipe(map(list => list.map(p => new PatientViewModel(p))));
   }
 
-  // ── Update ────────────────────────────────────────────────────────────
-
   // PUT /api/Patient/{id}
-  // Fields accepted by the backend: gender, bloodType, allergies, insuranceInfo
   update(id: number, dto: {
     gender?:       string;
     bloodType?:    string;
     allergies?:    string;
     insuranceInfo?: string;
   }): Observable<void> {
-    return this.http.put<void>(`${this.base}/${id}`, dto);
+    return this.http.put<void>(API.PATIENT.BY_ID(id), dto);
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────
-
-  // DELETE /api/Patient/{id} — admin only, hard delete
+  // DELETE /api/Patient/{id}
   deletePatient(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+    return this.http.delete<void>(API.PATIENT.BY_ID(id));
   }
-
-  // ── Related data ──────────────────────────────────────────────────────
 
   // GET /api/Appointment/patient/{patientId}
   getAppointments(patientId: number): Observable<PatientAppointment[]> {
-    if (USE_FAKE_DATA) return of([]);
-    return this.http.get<PatientAppointment[]>(
-      `${environment.apiUrl}/api/Appointment/patient/${patientId}`
-    );
+    return this.http.get<PatientAppointment[]>(API.APPOINTMENT.BY_PATIENT(patientId));
   }
 
   // GET /Api/Visit/Patient/{patientId}
   getVisits(patientId: number): Observable<PatientVisit[]> {
-    if (USE_FAKE_DATA) return of([]);
-    return this.http.get<PatientVisit[]>(
-      `${environment.apiUrl}/Api/Visit/Patient/${patientId}`
-    );
+    return this.http.get<PatientVisit[]>(API.VISIT.BY_PATIENT(patientId));
   }
 }

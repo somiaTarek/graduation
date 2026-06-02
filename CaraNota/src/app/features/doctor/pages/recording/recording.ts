@@ -1,16 +1,4 @@
 // src/app/features/doctor/pages/recording/recording.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Reached via /doctor/recording/:visitId
-// The visitId in the URL is the REAL visitId from POST /Api/Visit
-// (NOT the appointmentID — today-visit.ts creates the Visit first)
-//
-// Flow:
-//   1. Page loads → auto-starts mic recording
-//   2. Doctor clicks "End Recording" → stops MediaRecorder
-//   3. Calls AudioService.uploadAudio(blob, visitId) → POST /api/audio/upload
-//   4. On success → navigates to /doctor/visit-summary/:visitId
-// ─────────────────────────────────────────────────────────────────────────────
-
 import {
   Component, inject, signal, OnInit, OnDestroy, NgZone
 } from '@angular/core';
@@ -18,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { DoctorNavbar } from '../../../../layout/doctor-layout/doctor-navbar/doctor-navbar';
 import { AudioService } from '../../../../core/services/audio.service';
+import { Visit } from '../../../../core/models/appointment.model';
 
 interface PatientInfo {
   name: string;
@@ -48,6 +37,9 @@ export class Recording implements OnInit, OnDestroy {
   elapsedSeconds = signal(0);
   isUploading    = signal(false);
   uploadError    = signal<string | null>(null);
+
+  // Desktop file upload
+  selectedFile   = signal<File | null>(null);
 
   // Passed from today-visit via router state
   patient = signal<PatientInfo>({
@@ -96,7 +88,10 @@ export class Recording implements OnInit, OnDestroy {
   }
 
   private stopTimer(): void {
-    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
   }
 
   get formattedTime(): string {
@@ -118,7 +113,7 @@ export class Recording implements OnInit, OnDestroy {
       source.connect(this.analyser);
 
       this.mediaRecorder = new MediaRecorder(this.stream);
-      this.mediaRecorder.ondataavailable = (e) => {
+      this.mediaRecorder.ondataavailable = (e: BlobEvent) => {
         if (e.data.size > 0) this.audioChunks.push(e.data);
       };
       this.mediaRecorder.start(100);
@@ -200,10 +195,43 @@ export class Recording implements OnInit, OnDestroy {
     this.uploadAudio();
   }
 
+  // ── Desktop file upload ────────────────────────────────────────────────────
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedFile.set(file);
+    // Clear any previous upload error when a new file is chosen
+    this.uploadError.set(null);
+  }
+
+  clearFile(): void {
+    this.selectedFile.set(null);
+  }
+
+  get selectedFileName(): string {
+    return this.selectedFile()?.name ?? '';
+  }
+
+  get selectedFileSize(): string {
+    const bytes = this.selectedFile()?.size ?? 0;
+    if (bytes === 0) return '';
+    const kb = bytes / 1024;
+    return kb < 1024
+      ? Math.round(kb) + ' KB'
+      : (kb / 1024).toFixed(1) + ' MB';
+  }
+
   // ── Upload via AudioService ────────────────────────────────────────────────
+  // Priority: desktop-selected file > mic recording > navigate without upload
   private uploadAudio(): void {
-    // No mic — navigate directly (dev mode without hardware)
-    if (this.audioChunks.length === 0) {
+    const micBlob = this.audioChunks.length > 0
+      ? new Blob(this.audioChunks, { type: 'audio/webm' })
+      : null;
+
+    const fileToUpload: Blob | null = this.selectedFile() ?? micBlob;
+
+    if (!fileToUpload) {
+      // No audio at all (dev mode / mic denied and no file selected)
       this.router.navigate([`/doctor/visit-summary/${this.visitId()}`]);
       return;
     }
@@ -211,15 +239,12 @@ export class Recording implements OnInit, OnDestroy {
     this.isUploading.set(true);
     this.uploadError.set(null);
 
-    const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-
-    this.audioService.uploadAudio(blob, this.visitId()).subscribe({
+    this.audioService.uploadAudio(fileToUpload, this.visitId()).subscribe({
       next: () => {
         this.isUploading.set(false);
-        // Navigate to summary page — AI processing happens server-side
         this.router.navigate([`/doctor/visit-summary/${this.visitId()}`]);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('[Recording] Upload failed', err);
         this.isUploading.set(false);
         this.uploadError.set('Upload failed — navigating to summary anyway…');
@@ -238,7 +263,7 @@ export class Recording implements OnInit, OnDestroy {
   }
 
   private stopStream(): void {
-    this.stream?.getTracks().forEach(t => t.stop());
+    this.stream?.getTracks().forEach((t: MediaStreamTrack) => t.stop());
     this.audioCtx?.close().catch(() => {});
   }
 }

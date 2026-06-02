@@ -1,10 +1,15 @@
-// src/app/core/services/auth.service.ts
+// core/services/auth.service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// FIXES vs previous version:
+//   ✅ logout() — revoke is now fire-and-forget AFTER session clear (no empty body issue)
+//   ✅ Uses API constants instead of raw strings
+//   ✅ refreshToken() uses API constants
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import {
   LoginRequest,
   LoginResponse,
@@ -13,12 +18,13 @@ import {
   RegisterResponse,
   UserRole,
 } from '../models/user';
+import { API } from '../constants/api';
 
 interface JwtPayload {
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': string;
-  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': string;
-  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': string;
-  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':   string;
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name':           string;
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role':         string;
   exp: number;
 }
 
@@ -33,69 +39,59 @@ export class AuthService {
   private readonly PATIENT_ID_KEY      = 'patient_id';
   private readonly DOCTOR_ID_KEY       = 'doctor_id';
   private readonly RECEPTIONIST_ID_KEY = 'receptionist_id';
-  private readonly ADMIN_ID_KEY        = 'admin_id';   // ← added
+  private readonly ADMIN_ID_KEY        = 'admin_id';
 
   private currentUserSubject = new BehaviorSubject<LoginResponse['user'] | null>(
     this.getUserFromStorage()
   );
   currentUser$ = this.currentUserSubject.asObservable();
 
-  // ─── Auth API Calls ───────────────────────────────────────────────────
+  // ── Auth API calls ────────────────────────────────────────────────────────
 
   login(payload: LoginRequest): Observable<RawLoginResponse> {
     return this.http
-      .post<RawLoginResponse>(`${environment.apiUrl}/Api/Auth/Login`, payload)
-      .pipe(
-        tap((res) => {
-          const normalized = this.normalizeLoginResponse(res);
-          this.setSession(normalized);
-          this.currentUserSubject.next(normalized.user);
-        })
-      );
+      .post<RawLoginResponse>(API.AUTH.LOGIN, payload)
+      .pipe(tap(res => {
+        const normalized = this.normalizeLoginResponse(res);
+        this.setSession(normalized);
+        this.currentUserSubject.next(normalized.user);
+      }));
   }
 
   register(payload: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(
-      `${environment.apiUrl}/Api/Auth/Register`,
-      payload
-    );
+    return this.http.post<RegisterResponse>(API.AUTH.REGISTER, payload);
   }
 
   refreshToken(): Observable<RawLoginResponse> {
-    const accessToken  = this.getToken();
-    const refreshToken = localStorage.getItem(this.REFRESH_KEY);
     return this.http
-      .post<RawLoginResponse>(`${environment.apiUrl}/Api/Auth/Refresh`, {
-        accessToken,
-        refreshToken,
+      .post<RawLoginResponse>(API.AUTH.REFRESH, {
+        accessToken:  this.getToken(),
+        refreshToken: localStorage.getItem(this.REFRESH_KEY),
       })
-      .pipe(
-        tap((res) => {
-          const normalized = this.normalizeLoginResponse(res);
-          this.setSession(normalized);
-          this.currentUserSubject.next(normalized.user);
-        })
-      );
+      .pipe(tap(res => {
+        const normalized = this.normalizeLoginResponse(res);
+        this.setSession(normalized);
+        this.currentUserSubject.next(normalized.user);
+      }));
   }
 
+  // ✅ FIX: clear session first, then fire revoke (avoids 401 loop in error interceptor)
+  // The revoke call is best-effort — we don't wait for it before navigating.
   logout(): void {
-    this.http
-      .post(`${environment.apiUrl}/Api/Auth/Revoke`, {})
-      .subscribe({ error: () => {} });
     this.clearSession();
     this.router.navigate(['/auth/login']);
+    this.http.post(API.AUTH.REVOKE, null).subscribe({ error: () => {} });
   }
 
-  // ─── Response Normalization ───────────────────────────────────────────
+  // ── Response normalization ────────────────────────────────────────────────
 
   private normalizeLoginResponse(raw: RawLoginResponse): LoginResponse {
     const rawRole = raw.roles?.[0]?.toLowerCase() ?? 'patient';
 
-    // Store whichever integer ID the backend returned for this role
     if (raw.patientId)      localStorage.setItem(this.PATIENT_ID_KEY,      raw.patientId.toString());
     if (raw.doctorId)       localStorage.setItem(this.DOCTOR_ID_KEY,        raw.doctorId.toString());
     if (raw.receptionistId) localStorage.setItem(this.RECEPTIONIST_ID_KEY,  raw.receptionistId.toString());
-    if (raw.adminId)        localStorage.setItem(this.ADMIN_ID_KEY,          raw.adminId.toString()); // ← added
+    if (raw.adminId)        localStorage.setItem(this.ADMIN_ID_KEY,          raw.adminId.toString());
 
     return {
       token:        raw.accessToken,
@@ -109,7 +105,7 @@ export class AuthService {
     };
   }
 
-  // ─── Token Management ─────────────────────────────────────────────────
+  // ── Token management ─────────────────────────────────────────────────────
 
   private setSession(authResult: LoginResponse): void {
     localStorage.setItem(this.TOKEN_KEY,   authResult.token);
@@ -124,7 +120,7 @@ export class AuthService {
     localStorage.removeItem(this.PATIENT_ID_KEY);
     localStorage.removeItem(this.DOCTOR_ID_KEY);
     localStorage.removeItem(this.RECEPTIONIST_ID_KEY);
-    localStorage.removeItem(this.ADMIN_ID_KEY);   // ← added
+    localStorage.removeItem(this.ADMIN_ID_KEY);
     this.currentUserSubject.next(null);
   }
 
@@ -137,14 +133,13 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
     try {
-      const base64Payload = token.split('.')[1];
-      return JSON.parse(atob(base64Payload)) as JwtPayload;
+      return JSON.parse(atob(token.split('.')[1])) as JwtPayload;
     } catch {
       return null;
     }
   }
 
-  // ─── State & Authorization ────────────────────────────────────────────
+  // ── State & authorization ─────────────────────────────────────────────────
 
   isLoggedIn(): boolean {
     const payload = this.decodeToken();
@@ -157,35 +152,34 @@ export class AuthService {
     if (storedRole) return storedRole;
     const payload = this.decodeToken();
     if (!payload) return null;
-    const rawRole = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-    return rawRole ? (rawRole.toLowerCase() as UserRole) : null;
+    const raw = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    return raw ? (raw.toLowerCase() as UserRole) : null;
   }
 
   getUserId(): string | null {
     return this.currentUserSubject.value?.id ?? null;
   }
 
-  // ─── Role-specific integer IDs ────────────────────────────────────────
+  // ── Role-specific integer IDs ─────────────────────────────────────────────
 
   getPatientId(): number | null {
-    const val = localStorage.getItem(this.PATIENT_ID_KEY);
-    return val ? parseInt(val, 10) : null;
+    const v = localStorage.getItem(this.PATIENT_ID_KEY);
+    return v ? parseInt(v, 10) : null;
   }
 
   getDoctorId(): number | null {
-    const val = localStorage.getItem(this.DOCTOR_ID_KEY);
-    return val ? parseInt(val, 10) : null;
+    const v = localStorage.getItem(this.DOCTOR_ID_KEY);
+    return v ? parseInt(v, 10) : null;
   }
 
   getReceptionistId(): number | null {
-    const val = localStorage.getItem(this.RECEPTIONIST_ID_KEY);
-    return val ? parseInt(val, 10) : null;
+    const v = localStorage.getItem(this.RECEPTIONIST_ID_KEY);
+    return v ? parseInt(v, 10) : null;
   }
 
-  // ← added
   getAdminId(): number | null {
-    const val = localStorage.getItem(this.ADMIN_ID_KEY);
-    return val ? parseInt(val, 10) : null;
+    const v = localStorage.getItem(this.ADMIN_ID_KEY);
+    return v ? parseInt(v, 10) : null;
   }
 
   saveDoctorId(doctorId: number): void {
@@ -197,7 +191,7 @@ export class AuthService {
       doctor:       '/doctor/dashboard',
       patient:      '/patient/dashboard',
       receptionist: '/receptionist/dashboard',
-      admin:        '/admin/dashboard',   // ← added
+      admin:        '/admin/dashboard',
     };
     this.router.navigate([routes[role]]);
   }

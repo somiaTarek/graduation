@@ -1,4 +1,5 @@
 // src/app/features/doctor/pages/doctor-profile/doctor-profile.ts
+
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -16,10 +17,10 @@ import { Doctor } from '../../../../core/models/appointment.model';
 export class DoctorProfile implements OnInit {
   private doctorService = inject(DoctorService);
 
-  doctor   = signal<Doctor | null>(null);
+  doctor    = signal<Doctor | null>(null);
   isLoading = signal(true);
-  error    = signal<string | null>(null);
-  initials = signal('DR');
+  error     = signal<string | null>(null);
+  initials  = signal('DR');
 
   // Static display stats — replace with real API calls if backend adds them
   stats = [
@@ -30,11 +31,17 @@ export class DoctorProfile implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.doctorService.resolveDoctorId().subscribe({
-      next: (doc) => {
+    // ✅ resolveDoctorProfile() uses getDoctorId() (integer) → /api/Doctor/3
+    this.doctorService.resolveDoctorProfile().subscribe({
+      next: (doc: Doctor) => {
         this.doctor.set(doc);
         this.initials.set(
-          doc.fullName.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()
+          doc.fullName
+            .split(' ')
+            .slice(0, 2)
+            .map((n: string) => n[0])
+            .join('')
+            .toUpperCase()
         );
         this.isLoading.set(false);
       },

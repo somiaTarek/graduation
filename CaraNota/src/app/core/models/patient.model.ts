@@ -1,63 +1,77 @@
-// src/app/core/models/patient.model.ts
+// core/models/patient.model.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// CHANGES vs previous version:
+//
+//   🗑️  DELETED: `Appointment` interface
+//       — was a duplicate of `PatientAppointment` with different field names
+//         (appointmentDate vs startTime/endTime). Nothing imports `Appointment`
+//         from this file — only `PatientAppointment` is used externally.
+//
+//   🗑️  DELETED: `FAKE_PATIENTS` constant + related `of`/`delay` imports
+//       — only used by the old patient.service.ts which had a USE_FAKE_DATA
+//         flag. The updated patient.service.ts is fully connected to the backend.
+//         Remove these when you replace patient.service.ts.
+//
+//   🗑️  DELETED: `PrescriptionMedication` interface
+//       — never imported anywhere outside this file.
+//         MedicationLine in visitsummary.service.ts is the correct equivalent.
+//
+//   ✅  KEPT: `Patient`, `UpdatePatientDto`, `Medication`, `PatientViewModel`,
+//             `PatientVisit`, `PatientAppointment`
+//       — all actively imported in components and services.
+// ─────────────────────────────────────────────────────────────────────────────
 
+// Raw patient shape returned by GET /api/Patient and GET /api/Patient/{id}
 export interface Patient {
-  id: number;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  gender?: string;
-  bloodType?: string;
-  allergies?: string;
+  id:            number;
+  fullName:      string;
+  email:         string;
+  phoneNumber:   string;
+  gender?:       string;
+  bloodType?:    string;
+  allergies?:    string;
   insuranceInfo?: string;
 }
 
 // PUT /api/Patient/{id} body
 export interface UpdatePatientDto {
-  gender?: string;
-  bloodType?: string;
-  allergies?: string;
+  gender?:        string;
+  bloodType?:     string;
+  allergies?:     string;
   insuranceInfo?: string;
 }
 
-export interface Appointment {
-  id: number;
-  appointmentDate: string;
-  appointmentType: string;
-  status: string;
-  patientID: number;
-  receptionistID?: number;
-}
-
+// Medication catalog item — GET /Api/Medication and /Api/Medication/{Id}
 export interface Medication {
-  id: number;
-  medicationName: string;
-  medicationType: string;
-  description?: string;
-  strength?: string;
+  id:              number;
+  medicationName:  string;
+  medicationType:  string;
+  description?:    string;
+  strength?:       string;
 }
 
+// Rich view model used by doctor patient pages and patient profile
 export class PatientViewModel {
-  id: number;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  gender?: string;
-  bloodType?: string;
-  allergies?: string;
+  id:            number;
+  fullName:      string;
+  email:         string;
+  phoneNumber:   string;
+  gender?:       string;
+  bloodType?:    string;
+  allergies?:    string;
   insuranceInfo?: string;
 
   constructor(data: any) {
-    // The backend may return the id as any of these field names.
-    // We try all of them so a casing mismatch never gives us 0.
+    // .NET may return id under several different casing variants
     this.id =
-      data.id ??
-      data.patientId ??      // ← some .NET responses use patientId
-      data.patientID ??      // ← or patientID
-      data.userId ??
+      data.id          ??
+      data.patientId   ??
+      data.patientID   ??
+      data.userId      ??
       0;
 
     this.fullName      = data.fullName ?? data.name ?? '';
-    this.email         = data.email ?? '';
+    this.email         = data.email    ?? '';
     this.phoneNumber   = data.phoneNumber ?? '';
     this.gender        = data.gender;
     this.bloodType     = data.bloodType;
@@ -74,6 +88,7 @@ export class PatientViewModel {
       .slice(0, 2);
   }
 
+  // Placeholder — backend does not expose dateOfBirth yet
   get age(): number { return 0; }
 
   get allergyList(): string[] {
@@ -83,61 +98,21 @@ export class PatientViewModel {
   }
 }
 
+// Used by GET /Api/Visit/Patient/{patientId}
 export interface PatientVisit {
-  id: number;
-  visitDate: string;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  id:            number;
+  visitDate:     string;
+  subjective?:   string;
+  objective?:    string;
+  assessment?:   string;
+  plan?:         string;
   appointmentID?: number;
 }
 
+// Used by GET /api/Appointment/patient/{patientId}
 export interface PatientAppointment {
-  id: number;
+  id:              number;
   appointmentDate: string;
   appointmentType: string;
-  status: string;
+  status:          string;
 }
-
-export interface PrescriptionMedication {
-  medicationID: number;
-  medicationName: string;
-  dosage?: string;
-  frequency?: string;
-  route?: string;
-  duration?: string;
-  notes?: string;
-}
-
-export const FAKE_PATIENTS: PatientViewModel[] = [
-  new PatientViewModel({
-    id: 101,
-    fullName: 'Ahmed Hassan',
-    email: 'ahmed@example.com',
-    phoneNumber: '+20-100-000-0001',
-    gender: 'Male',
-    bloodType: 'A+',
-    allergies: 'Penicillin, Dust',
-    insuranceInfo: 'AllianzCare - Policy #12345',
-  }),
-  new PatientViewModel({
-    id: 102,
-    fullName: 'Mariam Youssef',
-    email: 'mariam@example.com',
-    phoneNumber: '+20-100-000-0002',
-    gender: 'Female',
-    bloodType: 'O-',
-    allergies: '',
-    insuranceInfo: 'MetLife - Policy #67890',
-  }),
-  new PatientViewModel({
-    id: 103,
-    fullName: 'Tarek Mostafa',
-    email: 'tarek@example.com',
-    phoneNumber: '+20-100-000-0003',
-    gender: 'Male',
-    bloodType: 'B+',
-    allergies: 'Aspirin',
-  }),
-];

@@ -20,7 +20,7 @@ import { Appointment } from '../../../../../core/models/appointment.model';
 import { CalendarEvent, SchedulingData } from '../models/scheduling.models';
 
 // ─── Flip to false when backend is ready ─────────────────────────────────────
-const USE_FAKE_DATA = true;
+const USE_FAKE_DATA = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })

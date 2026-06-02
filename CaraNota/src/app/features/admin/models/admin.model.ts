@@ -31,10 +31,8 @@ export interface CreateDoctorRequest {
   email: string;
   password: string;
   phoneNumber: string;
-  specialty: string;  // ← confirmed field name
-  licenseNumber?: string;
+  specialty: string;
 }
-
 export interface CreateReceptionistRequest {
   fullName: string;
   email: string;

@@ -1,183 +1,210 @@
-// src/app/core/models/appointment.model.ts
+// core/models/appointment.model.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Owns only what is NOT already in patient.model.ts.
+// All interfaces are aligned with the FINAL Swagger schemas.
 //
-// patient.model.ts already owns:
-//   ✅ Patient interface         → use from patient.model.ts
-//   ✅ Appointment interface     → use from patient.model.ts  (named PatientAppointment there)
-//   ✅ Medication interface      → use from patient.model.ts
-//
-// This file owns everything else: Visit, Audio, Summary, Doctor, DTOs, etc.
+// Key changes vs previous version:
+//   • DoctorSummaryDto — `doctorRating` field REMOVED (not in final swagger)
+//   • PatientSummaryDto — `followUp` field REMOVED; `whenToSeekHelp` stays
+//   • ApproveSummaryDto — was { rating: number } → now { followUpDate?: string }
+//   • UpdateSummaryDto  — new `whenToSeekHelp` field added (EditSummaryDto in swagger)
+//   • UpdateVisitDto    — new `whenToSeekHelp` and `followUpDate` fields added
+//   • PatientSummaryViewDto — brand new DTO for GET /api/visits/{id}/patient-summary
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Appointment (doctor-facing, full shape from /api/Appointment) ─────────────
-// patient.model.ts has a lighter PatientAppointment used in the patient UI.
-// This one is the full shape used by scheduling, today-visits, recording flow.
+// ── Appointment ───────────────────────────────────────────────────────────────
 export interface Appointment {
   appointmentID: number;
-  startTime: string;          // UTC ISO string — always convert before display
-  endTime: string;
-  status: AppointmentStatus;
-  appointmentType: string;
-  createdAt: string;
-  patientID: number;
-  patientName: string;
-  doctorID: number;
-  doctorName: string;
-  receptionistID?: number;
+  startTime:        string;
+  endTime:          string;
+  status:           AppointmentStatus;
+  appointmentType:  string;
+  createdAt:        string;
+  patientID:        number;
+  patientName:      string;
+  doctorID:         number;
+  doctorName:       string;
+  receptionistID?:  number;
 }
 
 export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled';
 
 export interface CreateAppointmentDto {
-  startTime: string;
-  endTime: string;
+  startTime:       string;         // ISO 8601
+  endTime:         string;
   appointmentType: string;
-  patientID: number;
-  doctorID: number;
-  receptionistID?: number;
+  patientID:       number;
+  doctorID:        number;
+  receptionistID:  number;         // required by swagger (no ?)
 }
 
 export interface UpdateAppointmentDto {
-  startTime?: string;
-  endTime?: string;
-  status?: AppointmentStatus;
+  startTime?:       string;
+  endTime?:         string;
+  status?:          AppointmentStatus;
   appointmentType?: string;
 }
 
 export interface TimeSlot {
   start: string;
-  end: string;
+  end:   string;
 }
 
 // ── Visit ─────────────────────────────────────────────────────────────────────
 export interface Visit {
-  visitId: number;
-  visitDate: string;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  visitId:       number;
+  visitDate:     string;
+  subjective?:   string;
+  objective?:    string;
+  assessment?:   string;
+  plan?:         string;
   appointmentID: number;
 }
 
 export interface CreateVisitDto {
-  visitDate: string;          // ISO 8601 UTC — pass new Date().toISOString()
   appointmentID: number;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  visitDate:     string;           // ISO 8601
+  subjective?:   string;
+  objective?:    string;
+  assessment?:   string;
+  plan?:         string;
 }
 
+// ⚠️ New fields added in final swagger: whenToSeekHelp, followUpDate
 export interface UpdateVisitDto {
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  subjective?:      string;
+  objective?:       string;
+  assessment?:      string;
+  plan?:            string;
+  whenToSeekHelp?:  string;        // ← NEW
+  followUpDate?:    string;        // ← NEW  ISO 8601 datetime
 }
 
 // ── Audio ─────────────────────────────────────────────────────────────────────
 export interface AudioRecordResponseDto {
-  audioId: number;
+  audioId:      number;
   audioFileUrl: string;
-  createdAt: string;
-  deletionAt: string;
-  visitId: number;
-  message: string;
+  createdAt:    string;
+  deletionAt:   string;
+  visitId:      number;
+  message:      string;
 }
 
 export type AudioProcessingStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed';
 
 export interface AudioStatusDto {
-  visitId: number;
-  status: AudioProcessingStatus;
+  visitId:        number;
+  status:         AudioProcessingStatus;
   transcription?: string;
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
+
+// Doctor-facing SOAP summary (GET /api/visits/{id}/summary → doctorSummary)
+// ⚠️ `doctorRating` removed — it no longer exists in the final swagger schema
 export interface DoctorSummaryDto {
   aiSummaryId: number;
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-  doctorRating: number;
+  subjective:  string;
+  objective:   string;
+  assessment:  string;
+  plan:        string;
 }
 
+// Embedded inside VisitSummaryResponseDto (doctor summary page)
+// ⚠️ `followUp` removed — final swagger only has `whenToSeekHelp`
 export interface PatientSummaryDto {
-  aiSummaryId: number;
-  diagnosis: string;
-  symptoms: string;
-  treatmentPlan: string;
+  aiSummaryId:    number;
+  diagnosis:      string;
+  symptoms:       string;
+  treatmentPlan:  string;
   whenToSeekHelp: string;
-  followUp: string;
 }
 
 export interface VisitSummaryResponseDto {
-  visitId: number;
-  isApproved: boolean;
-  doctorSummary: DoctorSummaryDto;
+  visitId:        number;
+  isApproved:     boolean;
+  doctorSummary:  DoctorSummaryDto;
   patientSummary: PatientSummaryDto;
 }
 
+// PUT /api/visits/{id}/summary body (was UpdateSummaryDto, swagger calls it EditSummaryDto)
+// ⚠️ New field `whenToSeekHelp` added in final swagger
 export interface UpdateSummaryDto {
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
+  subjective?:     string;
+  objective?:      string;
+  assessment?:     string;
+  plan?:           string;
+  whenToSeekHelp?: string;         // ← NEW
 }
 
+// POST /api/visits/{id}/summary/approve body
+// ⚠️ BREAKING CHANGE: was { rating: number } → now { followUpDate?: string }
+// The /rating endpoint no longer exists — only /approve remains.
 export interface ApproveSummaryDto {
-  rating: number;             // 0–5 float
+  followUpDate?: string;           // ← CHANGED — ISO 8601 datetime, optional
 }
 
+// GET /api/visits/{id}/patient-summary  ← NEW endpoint in final swagger
+// Patient-facing read-only view of their visit summary
+export interface PatientSummaryViewDto {
+  visitId:        number;
+  visitDate:      string;
+  diagnosis?:     string;
+  symptoms?:      string;
+  treatmentPlan?: string;
+  whenToSeekHelp?: string;
+  followUpDate?:  string;          // ISO 8601 datetime
+}
 
 // ── Doctor ────────────────────────────────────────────────────────────────────
 export interface Doctor {
-  id: number;
-  fullName: string;
-  email: string;
-  specialty: string;
+  id:           number;
+  fullName:     string;
+  email:        string;
+  specialty:    string;
   phoneNumber?: string;
 }
 
 // ── Prescription ──────────────────────────────────────────────────────────────
 export interface Prescription {
-  id: number;
+  id:           number;
   instructions: string;
-  visitID: number;
+  visitID:      number;
 }
 
 export interface CreatePrescriptionDto {
   instructions: string;
-  visitID: number;
+  visitID:      number;
+}
+
+export interface UpdatePrescriptionDto {
+  instructions: string;
 }
 
 export interface AddMedicationToPrescriptionDto {
   medicationID: number;
-  dosage: string;
-  frequency: string;
-  route: string;
-  duration: string;
-  notes?: string;
+  dosage?:      string;
+  frequency?:   string;
+  route?:       string;
+  duration?:    string;
+  notes?:       string;
 }
 
 // ── Lab Test ──────────────────────────────────────────────────────────────────
 export interface LabTest {
-  id: number;
+  id:          number;
   labTestName: string;
-  visitID: number;
+  visitID:     number;
 }
 
 export interface CreateLabTestDto {
   labTestName: string;
-  visitID: number;
+  visitID:     number;
 }
 
 // ── Diagnosis ─────────────────────────────────────────────────────────────────
+// ⚠️ Field is `icD10Code` — odd casing from .NET; keep exactly as-is
 export interface Diagnosis {
-  icD10Code: string;          // ⚠️ Odd casing from backend — keep as-is to match JSON
+  icD10Code:     string;
   diagnosisName: string;
 }
 
