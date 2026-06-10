@@ -1,3 +1,4 @@
+<!-- patient-tabs.html -->
 <div class="tabs-wrapper">
 
   <!-- Tab bar -->
@@ -26,7 +27,7 @@
             <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
         }
-        @if (tab.key === 'summarization') {
+        @if (tab.key === 'visits') {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
@@ -47,18 +48,15 @@
       <div class="overview-grid">
         <div class="info-card">
           <h4 class="card-label">Personal Info</h4>
-          <!-- ✅ name → fullName -->
           <div class="info-row"><span>Full name</span><span>{{ patient.fullName }}</span></div>
           <div class="info-row"><span>Gender</span><span>{{ patient.gender | titlecase }}</span></div>
           <div class="info-row"><span>Blood type</span><span>{{ patient.bloodType }}</span></div>
-          <!-- ✅ phone → phoneNumber -->
           <div class="info-row"><span>Phone</span><span>{{ patient.phoneNumber }}</span></div>
           <div class="info-row"><span>Email</span><span>{{ patient.email }}</span></div>
         </div>
 
         <div class="info-card">
           <h4 class="card-label">Allergies</h4>
-          <!-- ✅ allergies is a string, not array -->
           @if (patient.allergies) {
             <span class="allergy-tag">{{ patient.allergies }}</span>
           } @else {
@@ -66,7 +64,6 @@
           }
 
           <h4 class="card-label" style="margin-top: 20px;">Active Medications</h4>
-          <!-- ✅ medications comes from @Input() not patient object -->
           <p class="stat-number">{{ medications.length }}</p>
           <p class="stat-label">total prescribed</p>
         </div>
@@ -78,16 +75,9 @@
       <div>
         <div class="section-header">
           <h3 class="section-title">Active Medications</h3>
-          <button class="add-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add medication
-          </button>
         </div>
 
         <div class="med-list">
-          <!-- ✅ medications from @Input(), use API field names -->
           @for (med of medications; track med.id) {
             <div class="med-card">
               <div class="med-icon">
@@ -98,11 +88,9 @@
               </div>
               <div class="med-info">
                 <div class="med-name-row">
-                  <!-- ✅ med.name → med.medicationName -->
                   <span class="med-name">{{ med.medicationName }}</span>
                   <span class="status-badge">{{ med.medicationType }}</span>
                 </div>
-                <!-- ✅ use API fields: strength, description -->
                 <p class="med-detail">{{ med.strength }}</p>
                 <p class="med-indication">{{ med.description }}</p>
               </div>
@@ -121,25 +109,17 @@
       <div>
         <div class="section-header">
           <h3 class="section-title">Appointments</h3>
-          <button class="add-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            New appointment
-          </button>
+          <!-- ✅ "New appointment" button removed — doctors don't create appointments -->
         </div>
 
         <div class="appt-list">
-          <!-- ✅ appointments from @Input(), use API field names -->
           @for (appt of appointments; track appt.id) {
             <div class="appt-card">
               <div class="appt-date-block">
-                <!-- ✅ appt.date → appt.appointmentDate -->
-                <span class="appt-date">{{ appt.appointmentDate | date:'mediumDate' }}</span>
-                <span class="appt-time">{{ appt.appointmentDate | date:'shortTime' }}</span>
+                <span class="appt-date">{{ appt.startTime | date:'mediumDate' }}</span>
+                <span class="appt-time">{{ appt.startTime | date:'shortTime' }}</span>
               </div>
               <div class="appt-info">
-                <!-- ✅ appt.type → appt.appointmentType -->
                 <span class="appt-type">{{ appt.appointmentType }}</span>
               </div>
               <span class="appt-status"
@@ -158,21 +138,117 @@
       </div>
     }
 
-    <!-- SUMMARIZATION -->
-    @if (activeTab === 'summarization') {
-      <div class="summary-section">
+    <!-- VISIT HISTORY -->
+    @if (activeTab === 'visits') {
+      <div>
         <div class="section-header">
-          <h3 class="section-title">AI Clinical Summary</h3>
-          <button class="add-btn">Generate Summary</button>
+          <h3 class="section-title">Visit History</h3>
+          <span class="text-xs text-gray-400">{{ visits.length }} visit{{ visits.length !== 1 ? 's' : '' }}</span>
         </div>
-        <div class="summary-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <p>No summary generated yet.</p>
-          <p style="font-size: 12px;">Click "Generate Summary" to create an AI clinical note for this patient.</p>
-        </div>
+
+        <!-- Loading -->
+        @if (visitsLoading) {
+          <div class="flex items-center justify-center py-10 gap-3 text-gray-400">
+            <svg class="w-5 h-5 animate-spin text-blue-400" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            <span class="text-sm">Loading visit history…</span>
+          </div>
+        }
+
+        <!-- Error -->
+        @if (visitsError) {
+          <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+            {{ visitsError }}
+          </div>
+        }
+
+        <!-- Visit cards -->
+        @if (!visitsLoading && !visitsError) {
+          <div class="space-y-3">
+            @for (visit of visits; track visit.id) {
+              <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm
+                          hover:border-blue-200 hover:shadow-md transition-all group">
+
+                <!-- Header row -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-gray-800">
+                        {{ visit.visitDate | date:'mediumDate' }}
+                      </p>
+                      <p class="text-xs text-gray-400">Visit #{{ visit.id }}</p>
+                    </div>
+                  </div>
+
+                  <!-- View summary button -->
+                  <button
+                    (click)="goToVisitSummary(visit.id)"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                           text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors
+                           opacity-0 group-hover:opacity-100">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0
+                           01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622
+                           5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    View Summary
+                  </button>
+                </div>
+
+                <!-- SOAP preview -->
+                <div class="grid grid-cols-2 gap-2">
+                  @if (visit.subjective) {
+                    <div class="bg-indigo-50/60 rounded-lg px-3 py-2">
+                      <p class="text-xs font-semibold text-indigo-500 mb-0.5">Subjective</p>
+                      <p class="text-xs text-gray-700 line-clamp-2">{{ visit.subjective }}</p>
+                    </div>
+                  }
+                  @if (visit.objective) {
+                    <div class="bg-blue-50/60 rounded-lg px-3 py-2">
+                      <p class="text-xs font-semibold text-blue-500 mb-0.5">Objective</p>
+                      <p class="text-xs text-gray-700 line-clamp-2">{{ visit.objective }}</p>
+                    </div>
+                  }
+                  @if (visit.assessment) {
+                    <div class="bg-amber-50/60 rounded-lg px-3 py-2">
+                      <p class="text-xs font-semibold text-amber-600 mb-0.5">Assessment</p>
+                      <p class="text-xs text-gray-700 line-clamp-2">{{ visit.assessment }}</p>
+                    </div>
+                  }
+                  @if (visit.plan) {
+                    <div class="bg-green-50/60 rounded-lg px-3 py-2">
+                      <p class="text-xs font-semibold text-green-600 mb-0.5">Plan</p>
+                      <p class="text-xs text-gray-700 line-clamp-2">{{ visit.plan }}</p>
+                    </div>
+                  }
+                </div>
+
+                @if (!visit.subjective && !visit.objective && !visit.assessment && !visit.plan) {
+                  <p class="text-xs text-gray-400 italic">No SOAP notes recorded for this visit.</p>
+                }
+              </div>
+            }
+
+            @if (visits.length === 0) {
+              <div class="flex flex-col items-center gap-3 py-10 text-gray-400">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-sm">No previous visits found for this patient.</p>
+              </div>
+            }
+          </div>
+        }
       </div>
     }
 

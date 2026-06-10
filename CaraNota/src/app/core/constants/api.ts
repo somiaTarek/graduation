@@ -1,16 +1,11 @@
 // core/constants/api.ts
 // ─────────────────────────────────────────────────────────────────────────────
 // Single source of truth for ALL backend endpoints.
-// Generated from the FINAL Swagger (swagger__1___1_.json).
+// Source of truth: swagger_new.json
 //
 // ⚠️  URL CASING RULES — .NET routing is case-sensitive on Linux servers:
 //   /Api/…  (capital A) → Auth, Visit, Diagnosis, Medication, Prescription, LabTest
 //   /api/…  (lowercase) → Admin, Appointment, Doctor, Patient, audio, visits/summary
-//
-// Usage:
-//   import { API } from 'src/app/core/constants/api';
-//   this.http.get(API.VISIT.BY_ID(42))
-//   this.http.get(API.APPOINTMENT.AVAILABLE_SLOTS(doctorId), { params: { date } })
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { environment } from '../../../environments/environment';
@@ -29,105 +24,106 @@ export const API = {
 
   // ── §2  ADMIN  /api/admin ──────────────────────────────────────────────────
   ADMIN: {
-    PROFILE:             `${BASE}/api/admin/profile`,
-    CHANGE_PASSWORD:     `${BASE}/api/admin/change-password`,
-    CREATE_DOCTOR:       `${BASE}/api/admin/create-doctor`,
-    CREATE_RECEPTIONIST: `${BASE}/api/admin/create-receptionist`,
-    RECEPTIONISTS:       `${BASE}/api/admin/receptionists`,
-    RECEPTIONIST_BY_ID:  (id: number) => `${BASE}/api/admin/receptionists/${id}`,
+    PROFILE:             `${BASE}/api/admin/profile`,             // GET + PUT
+    CHANGE_PASSWORD:     `${BASE}/api/admin/change-password`,     // PUT
+    CREATE_DOCTOR:       `${BASE}/api/admin/create-doctor`,       // POST
+    CREATE_RECEPTIONIST: `${BASE}/api/admin/create-receptionist`, // POST
+    RECEPTIONISTS:       `${BASE}/api/admin/receptionists`,       // GET
+    DELETE_RECEPTIONIST: (id: number) => `${BASE}/api/admin/receptionists/${id}`, // DELETE only — no GET by id
   },
 
   // ── §3  PATIENT  /api/Patient ──────────────────────────────────────────────
+  // ⚠️  No /details sub-endpoint — removed from Swagger
   PATIENT: {
-    LIST:    `${BASE}/api/Patient`,
-    BY_ID:   (id: number) => `${BASE}/api/Patient/${id}`,
-    DETAILS: (id: number) => `${BASE}/api/Patient/${id}/details`,
-    SEARCH:  `${BASE}/api/Patient/search`,   // ?name=
+    LIST:   `${BASE}/api/Patient`,                          // GET
+    BY_ID:  (id: number) => `${BASE}/api/Patient/${id}`,   // GET, PUT, DELETE
+    SEARCH: `${BASE}/api/Patient/search`,                   // GET ?name=
   },
 
   // ── §4  DOCTOR  /api/Doctor ────────────────────────────────────────────────
+  // ⚠️  PUT body only accepts { specialty } — see UpdateDoctorDto
   DOCTOR: {
-    LIST:         `${BASE}/api/Doctor`,
-    BY_ID:        (id: number)        => `${BASE}/api/Doctor/${id}`,
-    BY_SPECIALTY: (specialty: string) => `${BASE}/api/Doctor/specialty/${specialty}`,
+    LIST:         `${BASE}/api/Doctor`,                                       // GET
+    BY_ID:        (id: number)        => `${BASE}/api/Doctor/${id}`,          // GET, PUT, DELETE
+    BY_SPECIALTY: (specialty: string) => `${BASE}/api/Doctor/specialty/${specialty}`, // GET
   },
 
   // ── §5  APPOINTMENT  /api/Appointment ─────────────────────────────────────
   APPOINTMENT: {
-    LIST:            `${BASE}/api/Appointment`,
-    BY_ID:           (id: number)        => `${BASE}/api/Appointment/${id}`,
-    DETAILS:         (id: number)        => `${BASE}/api/Appointment/${id}/details`,
-    BY_PATIENT:      (patientId: number) => `${BASE}/api/Appointment/patient/${patientId}`,
-    BY_DOCTOR:       (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}`,
-    BY_STATUS:       (status: string)    => `${BASE}/api/Appointment/status/${status}`,
-    DATE_RANGE:      `${BASE}/api/Appointment/date-range`,  // ?from=&to=
-    CANCEL:          (id: number)        => `${BASE}/api/Appointment/${id}/cancel`,
-    DOCTOR_WEEKLY:   (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}/weekly`,        // ?startOfWeek=
-    AVAILABLE_SLOTS: (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}/available-slots`, // ?date=
+    LIST:            `${BASE}/api/Appointment`,                                              // GET, POST
+    BY_ID:           (id: number)        => `${BASE}/api/Appointment/${id}`,                 // GET, PUT, DELETE
+    DETAILS:         (id: number)        => `${BASE}/api/Appointment/${id}/details`,         // GET
+    BY_PATIENT:      (patientId: number) => `${BASE}/api/Appointment/patient/${patientId}`,  // GET
+    BY_DOCTOR:       (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}`,    // GET
+    BY_STATUS:       (status: string)    => `${BASE}/api/Appointment/status/${status}`,      // GET
+    DATE_RANGE:      `${BASE}/api/Appointment/date-range`,                                   // GET ?from=&to=
+    CANCEL:          (id: number)        => `${BASE}/api/Appointment/${id}/cancel`,          // PUT
+    DOCTOR_WEEKLY:   (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}/weekly`,           // GET ?startOfWeek=
+    AVAILABLE_SLOTS: (doctorId: number)  => `${BASE}/api/Appointment/doctor/${doctorId}/available-slots`,  // GET ?date=
   },
 
   // ── §6  VISIT  /Api/Visit  (capital A) ────────────────────────────────────
   VISIT: {
-    LIST:           `${BASE}/Api/Visit`,
-    BY_ID:          (id: number)            => `${BASE}/Api/Visit/${id}`,
-    DETAILS:        (id: number)            => `${BASE}/Api/Visit/${id}/Details`,
-    BY_PATIENT:     (patientId: number)     => `${BASE}/Api/Visit/Patient/${patientId}`,
-    BY_APPOINTMENT: (appointmentId: number) => `${BASE}/Api/Visit/Appointment/${appointmentId}`,
+    LIST:           `${BASE}/Api/Visit`,                                             // GET, POST
+    BY_ID:          (id: number)            => `${BASE}/Api/Visit/${id}`,            // GET, PUT, DELETE
+    DETAILS:        (id: number)            => `${BASE}/Api/Visit/${id}/Details`,    // GET
+    BY_PATIENT:     (patientId: number)     => `${BASE}/Api/Visit/Patient/${patientId}`,           // GET
+    BY_APPOINTMENT: (appointmentId: number) => `${BASE}/Api/Visit/Appointment/${appointmentId}`,   // GET
   },
 
   // ── §7  SUMMARY  /api/visits (lowercase) ──────────────────────────────────
-  // ⚠️  PUT body now includes `whenToSeekHelp` field (new in final swagger).
-  // ⚠️  POST /approve body changed: was { rating } → now { followUpDate? }
-  // ⚠️  POST /rating endpoint REMOVED — use /approve instead.
-  // ⚠️  New separate endpoint: /patient-summary (patient-facing read-only view).
+  // ⚠️  PUT body: EditSummaryDto — includes whenToSeekHelp, followUp, diagnosis, etc.
+  // ⚠️  POST /approve has NO request body — send empty post: http.post(url, null)
+  // ⚠️  POST /rating: RateSummaryDto { rating, feedback } — still present in Swagger
   SUMMARY: {
-    BASE:           (visitId: number) => `${BASE}/api/visits/${visitId}/summary`,
-    APPROVE:        (visitId: number) => `${BASE}/api/visits/${visitId}/summary/approve`,
-    PATIENT_VIEW:   (visitId: number) => `${BASE}/api/visits/${visitId}/patient-summary`,
+    BASE:         (visitId: number) => `${BASE}/api/visits/${visitId}/summary`,          // GET, PUT
+    APPROVE:      (visitId: number) => `${BASE}/api/visits/${visitId}/summary/approve`,  // POST (no body)
+    RATING:       (visitId: number) => `${BASE}/api/visits/${visitId}/summary/rating`,   // POST { rating, feedback }
+    PATIENT_VIEW: (visitId: number) => `${BASE}/api/visits/${visitId}/patient-summary`,  // GET
   },
 
   // ── §8  AUDIO  /api/audio (lowercase) ─────────────────────────────────────
   AUDIO: {
-    UPLOAD: `${BASE}/api/audio/upload`,
-    STATUS: (visitId: number) => `${BASE}/api/audio/${visitId}/status`,
+    UPLOAD: `${BASE}/api/audio/upload`,                                // POST multipart { AudioFile, VisitId }
+    STATUS: (visitId: number) => `${BASE}/api/audio/${visitId}/status`, // GET
   },
 
   // ── §9  DIAGNOSIS  /Api/Diagnosis  (capital A) ────────────────────────────
+  // ⚠️  BREAKING CHANGE: no ICD lookup, no search, no assign endpoint.
+  //    DELETE takes integer {Id}, NOT an ICD string.
+  //    CREATE body: { diagnosisName, visitID } — visitID is capital ID.
   DIAGNOSIS: {
-    LIST:              `${BASE}/Api/Diagnosis`,
-    BY_ICD:            (icdCode: string) => `${BASE}/Api/Diagnosis/${icdCode}`,
-    SEARCH:            `${BASE}/Api/Diagnosis/Search`,          // ?Query=
-    BY_VISIT:          (visitId: number) => `${BASE}/Api/Diagnosis/Visit/${visitId}`,
-    ASSIGN:            (visitId: number) => `${BASE}/Api/Diagnosis/Visit/${visitId}/Assign`,
-    REMOVE_FROM_VISIT: (visitId: number, icdCode: string) =>
-                         `${BASE}/Api/Diagnosis/Visit/${visitId}/${icdCode}`,
+    BY_VISIT: (visitId: number) => `${BASE}/Api/Diagnosis/Visit/${visitId}`, // GET
+    CREATE:   `${BASE}/Api/Diagnosis`,                                         // POST { diagnosisName, visitID }
+    DELETE:   (id: number)      => `${BASE}/Api/Diagnosis/${id}`,              // DELETE — integer Id only
   },
 
   // ── §10  MEDICATION  /Api/Medication  (capital A) ─────────────────────────
   MEDICATION: {
-    LIST:    `${BASE}/Api/Medication`,
-    BY_ID:   (id: number)   => `${BASE}/Api/Medication/${id}`,
-    SEARCH:  `${BASE}/Api/Medication/Search`,                   // ?Name=
-    BY_TYPE: (type: string) => `${BASE}/Api/Medication/Type/${type}`,
+    LIST:    `${BASE}/Api/Medication`,                               // GET, POST
+    BY_ID:   (id: number)   => `${BASE}/Api/Medication/${id}`,      // GET, PUT, DELETE
+    SEARCH:  `${BASE}/Api/Medication/Search`,                        // GET ?Name=
+    BY_TYPE: (type: string) => `${BASE}/Api/Medication/Type/${type}`, // GET
   },
 
   // ── §11  PRESCRIPTION  /Api/Prescription  (capital A) ────────────────────
+  // ⚠️  No LIST-all endpoint — use BY_VISIT to fetch per visit
   PRESCRIPTION: {
-    LIST:             `${BASE}/Api/Prescription`,  // ⚠️ not in swagger — confirm with backend
-    BY_ID:            (id: number)      => `${BASE}/Api/Prescription/${id}`,
-    BY_VISIT:         (visitId: number) => `${BASE}/Api/Prescription/Visit/${visitId}`,
-    MEDICATIONS:      (id: number)      => `${BASE}/Api/Prescription/${id}/Medications`,
-    MEDICATION_BY_ID: (id: number, medicationId: number) =>
-                        `${BASE}/Api/Prescription/${id}/Medications/${medicationId}`,
+    BY_ID:             (id: number)      => `${BASE}/Api/Prescription/${id}`,                      // GET, PUT, DELETE
+    BY_VISIT:          (visitId: number) => `${BASE}/Api/Prescription/Visit/${visitId}`,           // GET
+    CREATE:            `${BASE}/Api/Prescription`,                                                   // POST
+    ADD_MEDICATION:    (id: number)      => `${BASE}/Api/Prescription/${id}/Medications`,           // POST
+    REMOVE_MEDICATION: (id: number, medicationId: number) =>
+                         `${BASE}/Api/Prescription/${id}/Medications/${medicationId}`,              // DELETE
   },
 
   // ── §12  LAB TEST  /Api/LabTest  (capital A) ──────────────────────────────
   LAB_TEST: {
-    LIST:          `${BASE}/Api/LabTest`,
-    BY_ID:         (id: number)      => `${BASE}/Api/LabTest/${id}`,
-    BY_VISIT:      (visitId: number) => `${BASE}/Api/LabTest/Visit/${visitId}`,
-    UPLOAD_RESULT: (id: number)      => `${BASE}/Api/LabTest/${id}/UploadResult`,
-    DOWNLOAD:      (id: number)      => `${BASE}/Api/LabTest/${id}/Download`,
+    BY_ID:         (id: number)      => `${BASE}/Api/LabTest/${id}`,              // GET, DELETE
+    BY_VISIT:      (visitId: number) => `${BASE}/Api/LabTest/Visit/${visitId}`,   // GET
+    CREATE:        `${BASE}/Api/LabTest`,                                           // POST { labTestName, visitID }
+    UPLOAD_RESULT: (id: number)      => `${BASE}/Api/LabTest/${id}/UploadResult`, // POST multipart { ResultFile }
+    DOWNLOAD:      (id: number)      => `${BASE}/Api/LabTest/${id}/Download`,     // GET → Blob
   },
 
 } as const;

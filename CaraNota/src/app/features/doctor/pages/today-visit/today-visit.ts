@@ -5,7 +5,8 @@ import { RouterModule, Router } from '@angular/router';
 import { DoctorNavbar } from '../../../../layout/doctor-layout/doctor-navbar/doctor-navbar';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { VisitService } from '../../../../core/services/visit.service';
-import { Appointment, Visit } from '../../../../core/models/appointment.model';
+import { Appointment } from '../../../../core/models/appointment.model';
+import { Visit } from '../../../../core/models/visit.model';
 
 // Which appointment the modal is open for, and which mode was chosen
 type VisitMode = 'recording' | 'manual';
@@ -101,17 +102,18 @@ loadAppointments(): void {
           visitType: appt.appointmentType,
         };
 
+        // visit.model Visit uses visitId (camelCase); normalize in case backend returns either casing
+        const resolvedVisitId = (visit as any).visitID ?? (visit as any).visitId ?? visit.visitId;
+
         if (mode === 'recording') {
-          // Doctor wants to record — go to recording page
           this.router.navigate(
-            [`/doctor/recording/${visit.visitID}`],
+            [`/doctor/recording/${resolvedVisitId}`],
             { state: { patient: patientState } }
           );
         } else {
-          // Manual entry — jump straight to visit-summary (no audio, no polling)
           this.router.navigate(
-            [`/doctor/visit-summary/${visit.visitID}`],
-            { state: { patient: patientState, skipPolling: true } }
+            ['/doctor/visit-note', resolvedVisitId],
+            { state: { patient: { name: appt.patientName, id: appt.patientID } } }
           );
         }
       },

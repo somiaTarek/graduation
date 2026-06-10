@@ -1,15 +1,8 @@
 // src/app/features/doctor/pages/visit-summary/visit-summary.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Flow A (AI path):
-//   recording.ts  →  POST /api/audio/upload  →  navigate here (skipPolling: true)
-//   This page calls GET /api/visits/:visitId/summary directly — no polling.
-//   The backend returns the AI summary synchronously after upload.
-//
-// Flow B (Manual path):
-//   today-visit.ts sets { state: { skipPolling: true } }
-//   This page calls GET /api/visits/:visitId/summary directly.
-//   The summary may return 404 (no AI rows yet) — that is expected.
-//   The doctor can still edit via PUT and approve via POST /approve.
+// All DoctorSummaryDto + PatientSummaryDto fields are now editable via
+// the shared inline-edit modal. PDF export uses jsPDF + html2canvas from
+// npm (not CDN window globals) to avoid "html2canvas is not a function" errors.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -19,24 +12,38 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
-
 import { DoctorNavbar }    from '../../../../layout/doctor-layout/doctor-navbar/doctor-navbar';
 import { SummaryService }  from '../../../../core/services/summary.service';
 
 import {
   VisitSummaryResponseDto,
-  UpdateSummaryDto,
-  ApproveSummaryDto,
-} from '../../../../core/models/appointment.model';
+  EditSummaryDto,
+  PatientSummaryViewDto,
+} from '../../../../core/models/visit.model';
 
 type PageState =
-  | 'loading'    // fetching summary from backend
-  | 'ready'      // summary loaded, doctor reviewing
-  | 'editing'    // inline edit modal open
-  | 'saving'     // PUT /summary in flight
-  | 'approving'  // POST /summary/approve in flight
-  | 'approved'   // done — sent to patient
+  | 'loading'
+  | 'ready'
+  | 'editing'
+  | 'saving'
+  | 'approving'
+  | 'approved'
   | 'error';
+
+// All editable fields across both doctor + patient summaries
+type EditableField =
+  // Doctor summary fields
+  | 'subjective'
+  | 'objective'
+  | 'assessment'
+  | 'plan'
+  | 'comparisonWithPreviousVisit'
+  // Patient summary fields
+  | 'diagnosis'
+  | 'symptoms'
+  | 'treatmentPlan'
+  | 'whenToSeekHelp'
+  | 'followUp';
 
 @Component({
   selector: 'app-visit-summary',
@@ -54,21 +61,19 @@ export class VisitSummary implements OnInit, OnDestroy {
   visitId     = signal<number>(0);
   pageState   = signal<PageState>('loading');
   errorMsg    = signal<string | null>(null);
-
-  // True when navigated from today-visit with manual mode (no audio uploaded)
   isManualMode = signal(false);
 
-  // Summary data
   summary     = signal<VisitSummaryResponseDto | null>(null);
 
   // Approval
   docApproved  = signal(false);
   patApproved  = signal(false);
-  followUpDate = signal<string>('');
+
   bothApproved = computed(() => this.docApproved() && this.patApproved());
 
   // Inline edit
-  editingField = signal<string | null>(null);
+  editingField = signal<EditableField | null>(null);
+  editLabel    = signal<string>('');
   editDraft    = signal<string>('');
 
   // PDF export
@@ -76,6 +81,13 @@ export class VisitSummary implements OnInit, OnDestroy {
 
   // Patient info from router state
   patientName  = signal<string>('');
+
+  // ── Rating ─────────────────────────────────────────────────────────────────
+  selectedRating = signal<number>(0);
+  ratingHover    = signal<number>(0);
+  ratingFeedback = signal<string>('');
+  ratingError    = signal<string | null>(null);
+  ratingState    = signal<'idle' | 'submitting' | 'done' | 'submitted'>('idle');
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   ngOnInit(): void {
@@ -86,22 +98,17 @@ export class VisitSummary implements OnInit, OnDestroy {
     if (state?.patient?.name) this.patientName.set(state.patient.name);
 
     if (state?.skipPolling === true) {
-      // Manual path — no audio was uploaded
       this.isManualMode.set(true);
       this.pageState.set('ready');
-      // summary will be null — that's fine, doctor fills in fields manually
-      // If summary already exists (re-visit), try to load it
       this.tryLoadExistingSummary();
     } else {
-      // AI path — audio was just uploaded; call summary directly (no polling)
       this.loadSummary();
     }
   }
 
   ngOnDestroy(): void {}
 
-  // ── Try to load an existing summary (manual path) ─────────────────────────
-  // It is OK if this returns 404 — it means no AI summary exists yet.
+  // ── Load helpers ───────────────────────────────────────────────────────────
   private tryLoadExistingSummary(): void {
     this.summaryService.getSummary(this.visitId()).subscribe({
       next: (data) => {
@@ -114,14 +121,10 @@ export class VisitSummary implements OnInit, OnDestroy {
           this.pageState.set('ready');
         }
       },
-      error: () => {
-        // 404 or no summary yet — stay in 'ready' with null summary
-        this.pageState.set('ready');
-      },
+      error: () => { this.pageState.set('ready'); },
     });
   }
 
-  // ── Load summary ──────────────────────────────────────────────────────────
   private loadSummary(): void {
     this.pageState.set('loading');
     this.summaryService.getSummary(this.visitId()).subscribe({
@@ -143,15 +146,17 @@ export class VisitSummary implements OnInit, OnDestroy {
   }
 
   // ── Inline edit ────────────────────────────────────────────────────────────
-  startEdit(field: string, currentValue: string): void {
+  startEdit(field: EditableField, label: string, currentValue: string | undefined | null): void {
     if (this.pageState() !== 'ready') return;
     this.editingField.set(field);
+    this.editLabel.set(label);
     this.editDraft.set(currentValue ?? '');
     this.pageState.set('editing');
   }
 
   cancelEdit(): void {
     this.editingField.set(null);
+    this.editLabel.set('');
     this.editDraft.set('');
     this.pageState.set('ready');
   }
@@ -163,42 +168,45 @@ export class VisitSummary implements OnInit, OnDestroy {
 
     this.pageState.set('saving');
 
-    const dto: UpdateSummaryDto = { [field]: draft };
+    // EditSummaryDto contains all 10 possible fields
+const dto: EditSummaryDto = { [field]: draft };
 
     this.summaryService.editSummary(this.visitId(), dto).subscribe({
       next: () => {
         this.summary.update(s => {
           if (!s) {
-            // Manual mode — no summary existed yet, create a minimal shell
+            // Manual mode — bootstrap a minimal shell
             return {
               visitId: this.visitId(),
               isApproved: false,
               doctorSummary: {
                 aiSummaryId: 0,
-                subjective: field === 'subjective' ? draft : '',
-                objective:  field === 'objective'  ? draft : '',
-                assessment: field === 'assessment' ? draft : '',
-                plan:       field === 'plan'       ? draft : '',
+                subjective:  field === 'subjective'  ? draft : '',
+                objective:   field === 'objective'   ? draft : '',
+                assessment:  field === 'assessment'  ? draft : '',
+                plan:        field === 'plan'        ? draft : '',
+                comparisonWithPreviousVisit: field === 'comparisonWithPreviousVisit' ? draft : '',
               },
               patientSummary: {
                 aiSummaryId:    0,
-                diagnosis:      '',
-                symptoms:       '',
-                treatmentPlan:  '',
+                diagnosis:      field === 'diagnosis'      ? draft : '',
+                symptoms:       field === 'symptoms'       ? draft : '',
+                treatmentPlan:  field === 'treatmentPlan'  ? draft : '',
                 whenToSeekHelp: field === 'whenToSeekHelp' ? draft : '',
-                followUp:       '',
+                followUp:       field === 'followUp'       ? draft : '',
               },
             } as VisitSummaryResponseDto;
           }
-          if (['subjective', 'objective', 'assessment', 'plan'].includes(field)) {
+
+          const docFields: EditableField[] = ['subjective', 'objective', 'assessment', 'plan', 'comparisonWithPreviousVisit'];
+          if (docFields.includes(field)) {
             return { ...s, doctorSummary: { ...s.doctorSummary, [field]: draft } };
+          } else {
+            return { ...s, patientSummary: { ...s.patientSummary, [field]: draft } };
           }
-          if (field === 'whenToSeekHelp') {
-            return { ...s, patientSummary: { ...s.patientSummary, whenToSeekHelp: draft } };
-          }
-          return s;
         });
         this.editingField.set(null);
+        this.editLabel.set('');
         this.editDraft.set('');
         this.pageState.set('ready');
       },
@@ -222,12 +230,10 @@ export class VisitSummary implements OnInit, OnDestroy {
   }
 
   sendToPatient(): void {
-    if (!this.bothApproved()) return;
-    this.pageState.set('approving');
+  if (!this.bothApproved()) return;
+  this.pageState.set('approving');
 
-    const dto: ApproveSummaryDto = {};   // no body — swagger confirms no request body
-
-    this.summaryService.approveSummary(this.visitId(), dto).subscribe({
+  this.summaryService.approveSummary(this.visitId()).subscribe({
       next: () => {
         this.pageState.set('approved');
         this.summary.update(s => s ? { ...s, isApproved: true } : s);
@@ -240,32 +246,73 @@ export class VisitSummary implements OnInit, OnDestroy {
     });
   }
 
-  // ── PDF export ─────────────────────────────────────────────────────────────
-  exportPDF(): void {
+  // ── PDF export — uses npm jsPDF + html2canvas (no CDN window globals) ──────
+  async exportPDF(): Promise<void> {
     this.isExporting.set(true);
-    const area = document.getElementById('pdf-export-area')!;
+    try {
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
 
-    (window as any).html2canvas(area, { scale: 2, backgroundColor: '#ffffff', useCORS: true })
-      .then((canvas: any) => {
-        const { jsPDF } = (window as any).jspdf;
-        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        const imgW = 297;
-        const imgH = canvas.height * imgW / canvas.width;
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, imgH);
-        const safeName = this.patientName().replace(/\s+/g, '-') || 'Patient';
-        pdf.save(`CareNota-Visit-${this.visitId()}-${safeName}.pdf`);
-        this.isExporting.set(false);
-      })
-      .catch(() => this.isExporting.set(false));
+      const html2canvas = html2canvasModule.default;
+      const { jsPDF }   = jsPDFModule;
+
+      const area = document.getElementById('pdf-export-area');
+      if (!area) throw new Error('Export area not found');
+
+      const canvas = await html2canvas(area, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+      });
+
+      const pdf   = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const imgW  = 297;
+      const imgH  = (canvas.height * imgW) / canvas.width;
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, imgH);
+
+      const safeName = this.patientName().replace(/\s+/g, '-') || 'Patient';
+      pdf.save(`CareNota-Visit-${this.visitId()}-${safeName}.pdf`);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+    } finally {
+      this.isExporting.set(false);
+    }
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
-  formatFollowUpDisplay(): string {
-    const v = this.followUpDate();
-    if (!v) return '';
-    const [y, m, d] = v.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('en-GB', {
-      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+
+  isStarActive(star: number): boolean {
+    return star <= (this.ratingHover() || this.selectedRating());
+  }
+
+  skipRating(): void {
+    this.selectedRating.set(0);
+    this.ratingFeedback.set('');
+    this.ratingError.set(null);
+    this.ratingState.set('idle');
+  }
+
+  submitRating(): void {
+    if (this.selectedRating() === 0) return;
+    this.ratingState.set('submitting');
+    this.ratingError.set(null);
+
+    this.summaryService.rateSummary(this.visitId(), {
+      rating:   this.selectedRating(),
+      feedback: this.ratingFeedback(),
+    }).subscribe({
+      next: () => {
+        this.ratingState.set('submitted');
+      },
+      error: (err) => {
+        this.ratingState.set('idle');
+        this.ratingError.set(err?.error?.message ?? 'Failed to submit rating. Please try again.');
+        setTimeout(() => this.ratingError.set(null), 4000);
+      },
     });
   }
 

@@ -1,7 +1,10 @@
 // core/services/patient.service.ts
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANGES vs previous version:
-//   ✅ Uses API constants
+//   ✅ getDetails() REMOVED — /api/Patient/{id}/details does not exist in Swagger.
+//      Use getById() instead.
+//   ✅ update() now typed with UpdatePatientDto interface (not inline type)
+//   ✅ getVisits() normalizes whenToSeekHelp and followUp from PatientVisit
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
@@ -11,6 +14,7 @@ import {
   PatientViewModel,
   PatientVisit,
   PatientAppointment,
+  UpdatePatientDto,
 } from '../models/patient.model';
 import { API } from '../constants/api';
 
@@ -32,13 +36,6 @@ export class PatientService {
       .pipe(map(p => new PatientViewModel(p)));
   }
 
-  // GET /api/Patient/{id}/details
-  getDetails(id: number): Observable<PatientViewModel> {
-    return this.http
-      .get<any>(API.PATIENT.DETAILS(id))
-      .pipe(map(p => new PatientViewModel(p)));
-  }
-
   // GET /api/Patient/search?name=
   search(name: string): Observable<PatientViewModel[]> {
     return this.http
@@ -47,12 +44,8 @@ export class PatientService {
   }
 
   // PUT /api/Patient/{id}
-  update(id: number, dto: {
-    gender?:       string;
-    bloodType?:    string;
-    allergies?:    string;
-    insuranceInfo?: string;
-  }): Observable<void> {
+  // ⚠️ Only { gender, bloodType, allergies, insuranceInfo } are accepted — Swagger confirmed.
+  update(id: number, dto: UpdatePatientDto): Observable<void> {
     return this.http.put<void>(API.PATIENT.BY_ID(id), dto);
   }
 
@@ -66,8 +59,27 @@ export class PatientService {
     return this.http.get<PatientAppointment[]>(API.APPOINTMENT.BY_PATIENT(patientId));
   }
 
-  // GET /Api/Visit/Patient/{patientId}
+  // GET /Api/Visit/Patient/{PatientId}
+  // ⚠️ Backend returns visitID (capital ID) — normalize to `id`.
+  // ⚠️ whenToSeekHelp and followUp added (new UpdateVisitDto fields).
   getVisits(patientId: number): Observable<PatientVisit[]> {
-    return this.http.get<PatientVisit[]>(API.VISIT.BY_PATIENT(patientId));
+    return this.http
+      .get<any[]>(API.VISIT.BY_PATIENT(patientId))
+      .pipe(
+        map(list =>
+          list.map(v => ({
+            id:              v.visitID ?? v.visitId ?? v.id ?? 0,
+            visitDate:       v.visitDate       ?? '',
+            subjective:      v.subjective      ?? null,
+            objective:       v.objective       ?? null,
+            assessment:      v.assessment      ?? null,
+            plan:            v.plan            ?? null,
+            symptoms:        v.symptoms        ?? null,
+            whenToSeekHelp:  v.whenToSeekHelp  ?? null,
+            followUp:        v.followUp        ?? null,
+            appointmentID:   v.appointmentID   ?? v.appointmentId ?? undefined,
+          } as PatientVisit))
+        )
+      );
   }
 }

@@ -3,14 +3,15 @@
 // Covers /Api/Visit endpoints (capital A — .NET routing).
 //
 // CHANGES vs previous version:
-//   ✅ Uses API constants
-//   ✅ updateSoapNotes() now accepts full UpdateVisitDto (includes whenToSeekHelp, followUpDate)
+//   ✅ Imports from visit.model.ts (not appointment.model)
+//   ✅ UpdateVisitDto now includes `whenToSeekHelp` and `followUp`
+//      (field was wrongly named `followUpDate` in old comment — corrected)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Visit, CreateVisitDto, UpdateVisitDto } from '../models/appointment.model';
+import { Visit, CreateVisitDto, UpdateVisitDto } from '../models/visit.model';
 import { API } from '../constants/api';
 
 @Injectable({ providedIn: 'root' })
@@ -18,6 +19,9 @@ export class VisitService {
   private http = inject(HttpClient);
 
   // POST /Api/Visit
+  // Body: CreateVisitDto { appointmentID, visitDate, subjective?, objective?, assessment?, plan?, symptoms? }
+  // ⚠️ Response returns visitId (or visitID) — normalize in the component with:
+  //    const id = (res as any).visitID ?? (res as any).visitId ?? res.visitId;
   createVisit(dto: CreateVisitDto): Observable<Visit> {
     return this.http.post<Visit>(API.VISIT.LIST, dto);
   }
@@ -48,8 +52,8 @@ export class VisitService {
   }
 
   // PUT /Api/Visit/{Id}
-  // ⚠️ Final swagger adds `whenToSeekHelp` and `followUpDate` to the body.
-  updateSoapNotes(id: number, dto: UpdateVisitDto): Observable<void> {
+  // Body: UpdateVisitDto — includes whenToSeekHelp and followUp (new Swagger fields).
+  updateVisit(id: number, dto: UpdateVisitDto): Observable<void> {
     return this.http.put<void>(API.VISIT.BY_ID(id), dto);
   }
 

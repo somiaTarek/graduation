@@ -7,7 +7,7 @@
       <!-- ✅ FIXED: patient.name → patient.fullName -->
       <h2 class="patient-name">{{ patient.fullName }}</h2>
       <div class="meta-row">
-        <span>{{ patient.age }} years old</span>
+        <span>{{ patient.age !== null ? patient.age + ' years old' : 'Age unknown' }}</span>
         <span class="dot">·</span>
         <span>Gender : {{ patient.gender }}</span>
         <span class="dot">·</span>

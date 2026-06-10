@@ -74,13 +74,13 @@ export class AppointmentService {
   // GET /api/Appointment/doctor/{id}/available-slots?date=YYYY-MM-DD
 getAvailableSlots(
   doctorId: number,
-  dateString: string
+  date: string
 ): Observable<TimeSlot[]> {
 
   return this.http.get<TimeSlot[]>(
     API.APPOINTMENT.AVAILABLE_SLOTS(doctorId),
     {
-      params: { date: dateString },
+      params: { date }
     }
   );
 }

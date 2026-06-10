@@ -10,10 +10,10 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs
 import { takeUntil } from 'rxjs/operators';
 
 import { AppointmentService } from '../../../core/services/appointment.service';
-import { DoctorService } from '../../../core/services/doctor.service';
+import { DoctorService, Doctor } from '../../../core/services/doctor.service';
 import { PatientService } from '../../../core/services/patient.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { CreateAppointmentDto, TimeSlot, Doctor } from '../../../core/models/appointment.model';
+import { CreateAppointmentDto, TimeSlot } from '../../../core/models/appointment.model';
 import { PatientViewModel } from '../../../core/models/patient.model';
 
 @Component({
@@ -182,7 +182,7 @@ onDoctorChange(value: string): void {
     this.fetchSlotsIfReady();
   }
 
-  private resetSlots(): void {
+private resetSlots(): void {
     this.selectedSlot.set(null);
     this.availableSlots.set([]);
   }
@@ -191,31 +191,23 @@ private fetchSlotsIfReady(): void {
   const doctorId = this.selectedDoctorId();
   const dateStr = this.selectedDate();
 
-  console.log('[FetchSlots] doctorId:', doctorId, '| date:', dateStr);
-
-  if (!doctorId || doctorId <= 0 || !dateStr) {
-    console.log('[FetchSlots] skipped — missing doctorId or date');
+  if (!doctorId || !dateStr) {
     return;
   }
-
-  // Use local date properly
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const localDate = new Date(year, month - 1, day);
 
   this.isLoadingSlots.set(true);
   this.error.set(null);
 
- this.appointmentService.getAvailableSlots(
-  doctorId,
-  this.selectedDate()
-).subscribe({
+  this.appointmentService.getAvailableSlots(
+    doctorId,
+    dateStr
+  ).subscribe({
     next: (slots) => {
-      console.log('[FetchSlots] ✅ received slots:', slots);
       this.availableSlots.set(slots || []);
       this.isLoadingSlots.set(false);
     },
     error: (err) => {
-      console.error('[FetchSlots] API error:', err);
+      console.error(err);
       this.error.set('Could not load available slots.');
       this.isLoadingSlots.set(false);
     }

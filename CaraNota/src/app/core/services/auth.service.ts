@@ -1,9 +1,9 @@
 // core/services/auth.service.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// FIXES vs previous version:
-//   ✅ logout() — revoke is now fire-and-forget AFTER session clear (no empty body issue)
-//   ✅ Uses API constants instead of raw strings
-//   ✅ refreshToken() uses API constants
+// CHANGES vs previous version:
+//   ✅ register() — RegisterRequest no longer includes `role` field (removed from Swagger).
+//      Registration is patient self-signup only. Import from updated user.ts.
+//   ✅ All other logic unchanged — already correct.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Injectable, inject } from '@angular/core';
@@ -46,7 +46,7 @@ export class AuthService {
   );
   currentUser$ = this.currentUserSubject.asObservable();
 
-  // ── Auth API calls ────────────────────────────────────────────────────────
+  // ── Auth API calls ─────────────────────────────────────────────────────────
 
   login(payload: LoginRequest): Observable<RawLoginResponse> {
     return this.http
@@ -58,6 +58,9 @@ export class AuthService {
       }));
   }
 
+  // POST /Api/Auth/Register
+  // ⚠️ RegisterRequest no longer has a `role` field — Swagger RegisterDto has none.
+  //    Patient registration only. Doctors/receptionists are created by admin endpoints.
   register(payload: RegisterRequest): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(API.AUTH.REGISTER, payload);
   }
@@ -75,15 +78,14 @@ export class AuthService {
       }));
   }
 
-  // ✅ FIX: clear session first, then fire revoke (avoids 401 loop in error interceptor)
-  // The revoke call is best-effort — we don't wait for it before navigating.
+  // ✅ Clear session first, then fire revoke — avoids 401 loop in error interceptor.
   logout(): void {
     this.clearSession();
     this.router.navigate(['/auth/login']);
     this.http.post(API.AUTH.REVOKE, null).subscribe({ error: () => {} });
   }
 
-  // ── Response normalization ────────────────────────────────────────────────
+  // ── Response normalization ─────────────────────────────────────────────────
 
   private normalizeLoginResponse(raw: RawLoginResponse): LoginResponse {
     const rawRole = raw.roles?.[0]?.toLowerCase() ?? 'patient';
@@ -105,7 +107,7 @@ export class AuthService {
     };
   }
 
-  // ── Token management ─────────────────────────────────────────────────────
+  // ── Token management ──────────────────────────────────────────────────────
 
   private setSession(authResult: LoginResponse): void {
     localStorage.setItem(this.TOKEN_KEY,   authResult.token);

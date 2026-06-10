@@ -2,8 +2,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { DoctorNavbar } from '../../../../layout/doctor-layout/doctor-navbar/doctor-navbar';
-import { DoctorService } from '../../../../core/services/doctor.service';
-import { Doctor } from '../../../../core/models/appointment.model';
+import { DoctorService, Doctor } from '../../../../core/services/doctor.service';
 
 @Component({
   selector: 'app-doctor-profile',

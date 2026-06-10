@@ -1,15 +1,4 @@
 <!-- account-form.component.html -->
-<!--
-  Reusable "Create an Account" form.
-  Inputs:
-    - submitLabel  : string   — text on the submit button (default: 'Register')
-    - isLoading    : boolean  — shows spinner on button
-    - errorMessage : string   — shows error banner
-    - showRoleField: boolean  — if true, shows the role dropdown (for admin/receptionist use)
-
-  Outputs:
-    - formSubmit: emits the RegisterRequest payload when the form is valid and submitted
--->
 <div class="w-full">
   <h2 class="text-2xl font-bold mb-1" style="color: #0f1f3d;">Create an Account</h2>
   <p class="text-sm text-gray-400 mb-6">Fill in the details below to register</p>
@@ -21,15 +10,11 @@
       <label class="block text-sm font-medium text-gray-700 mb-1.5">
         Full Name <span class="text-red-500">*</span>
       </label>
-      <input
-        type="text"
-        formControlName="fullName"
-        placeholder="e.g., John Doe"
-        class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all
-               border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
-        [class.border-red-400]="f['fullName'].invalid && f['fullName'].touched">
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['fullName'].touched && f['fullName'].hasError('required')">Full name is required</p>
+      <input type="text" formControlName="fullName" placeholder="e.g., John Doe"
+             class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
+             [class.border-red-400]="f['fullName'].invalid && f['fullName'].touched">
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['fullName'].touched && f['fullName'].hasError('required')">Full name is required</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['fullName'].touched && f['fullName'].hasError('whitespace')">Full name cannot be blank</p>
     </div>
 
     <!-- Email -->
@@ -37,17 +22,11 @@
       <label class="block text-sm font-medium text-gray-700 mb-1.5">
         Email address <span class="text-red-500">*</span>
       </label>
-      <input
-        type="email"
-        formControlName="email"
-        placeholder="you@clinic.com"
-        class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all
-               border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
-        [class.border-red-400]="f['email'].invalid && f['email'].touched">
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required</p>
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email address</p>
+      <input type="email" formControlName="email" placeholder="you@clinic.com"
+             class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
+             [class.border-red-400]="f['email'].invalid && f['email'].touched">
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email address</p>
     </div>
 
     <!-- Phone Number -->
@@ -55,15 +34,18 @@
       <label class="block text-sm font-medium text-gray-700 mb-1.5">
         Phone number <span class="text-red-500">*</span>
       </label>
-      <input
-        type="tel"
-        formControlName="phoneNumber"
-        placeholder="+20 123 456 7890"
-        class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all
-               border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
-        [class.border-red-400]="f['phoneNumber'].invalid && f['phoneNumber'].touched">
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['phoneNumber'].touched && f['phoneNumber'].hasError('required')">Phone number is required</p>
+      <input type="tel" formControlName="phoneNumber" placeholder="+20 123 456 7890 or 01012345678"
+             class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
+             [class.border-red-400]="f['phoneNumber'].invalid && f['phoneNumber'].touched">
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['phoneNumber'].touched && f['phoneNumber'].hasError('required')">Phone number is required</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['phoneNumber'].touched && f['phoneNumber'].hasError('egyptianPhone')">Enter a valid Egyptian phone number (e.g. 01012345678)</p>
+    </div>
+
+    <!-- Date of Birth -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth</label>
+      <input type="date" formControlName="dateOfBirth"
+             class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
     </div>
 
     <!-- Gender -->
@@ -71,16 +53,56 @@
       <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
       <div class="flex items-center gap-6">
         <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio" formControlName="gender" value="Male"
-                 class="accent-blue-700 w-4 h-4 cursor-pointer">
+          <input type="radio" formControlName="gender" value="Male" class="accent-blue-700 w-4 h-4 cursor-pointer">
           <span class="text-sm text-gray-700">Male</span>
         </label>
         <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio" formControlName="gender" value="Female"
-                 class="accent-blue-700 w-4 h-4 cursor-pointer">
+          <input type="radio" formControlName="gender" value="Female" class="accent-blue-700 w-4 h-4 cursor-pointer">
           <span class="text-sm text-gray-700">Female</span>
         </label>
       </div>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['gender'].touched && f['gender'].hasError('gender')">Gender must be Male, Female, or Other</p>
+    </div>
+
+    <!-- Blood Type -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Blood Type</label>
+      <select formControlName="bloodType"
+              class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
+        <option value="">Select blood type</option>
+        <option value="A+">A+</option>
+        <option value="A-">A-</option>
+        <option value="B+">B+</option>
+        <option value="B-">B-</option>
+        <option value="AB+">AB+</option>
+        <option value="AB-">AB-</option>
+        <option value="O+">O+</option>
+        <option value="O-">O-</option>
+      </select>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['bloodType'].touched && f['bloodType'].hasError('bloodType')">
+        Must be a valid blood type (A+, A-, B+, B-, AB+, AB-, O+, O-)
+      </p>
+    </div>
+
+    <!-- Allergies -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Allergies</label>
+      <textarea formControlName="allergies" rows="2" placeholder="List any known allergies (optional)"
+                class="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-y"></textarea>
+    </div>
+
+    <!-- Chronic Conditions -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Chronic Conditions</label>
+      <textarea formControlName="chronicConditions" rows="2" placeholder="List any chronic conditions (optional)"
+                class="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-y"></textarea>
+    </div>
+
+    <!-- Insurance Info -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Insurance Information</label>
+      <textarea formControlName="insuranceInfo" rows="2" placeholder="Insurance details (optional)"
+                class="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-y"></textarea>
     </div>
 
     <!-- Password -->
@@ -89,61 +111,32 @@
         Create Password <span class="text-red-500">*</span>
       </label>
       <div class="relative">
-        <input
-          [type]="showPassword ? 'text' : 'password'"
-          formControlName="password"
-          placeholder="Create a strong password"
-          class="w-full h-11 px-4 pr-11 text-sm border rounded-lg outline-none transition-all
-                 border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
-          [class.border-red-400]="f['password'].invalid && f['password'].touched">
+        <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+               placeholder="Create a strong password"
+               class="w-full h-11 px-4 pr-11 text-sm border rounded-lg outline-none transition-all border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300"
+               [class.border-red-400]="f['password'].invalid && f['password'].touched">
         <button type="button" (click)="showPassword = !showPassword"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
           <span class="material-icons text-lg">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
         </button>
       </div>
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['password'].touched && f['password'].hasError('required')">Password is required</p>
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['password'].touched && f['password'].hasError('minlength')">Password must be at least 8 characters</p>
-    </div>
-
-    <!--
-      Role field — only shown when showRoleField = true (receptionist admin use).
-      On the public register page this is hidden and always set to 'patient'.
-    -->
-    <div class="mb-6" *ngIf="showRoleField">
-      <label class="block text-sm font-medium text-gray-700 mb-1.5">
-        Your Role <span class="text-red-500">*</span>
-      </label>
-      <select
-        formControlName="role"
-        class="w-full h-11 px-4 text-sm border rounded-lg outline-none transition-all bg-white
-               border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-gray-700"
-        [class.border-red-400]="f['role'].invalid && f['role'].touched">
-        <option value="" disabled selected>Your Role</option>
-        <option value="patient">Patient</option>
-    
-      </select>
-      <p class="text-xs text-red-500 mt-1"
-         *ngIf="f['role'].touched && f['role'].hasError('required')">Role is required</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['password'].touched && f['password'].hasError('required')">Password is required</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['password'].touched && f['password'].hasError('minlength')">Password must be at least 8 characters</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['password'].touched && f['password'].hasError('uppercase')">Password must contain at least one uppercase letter</p>
+      <p class="text-xs text-red-500 mt-1" *ngIf="f['password'].touched && f['password'].hasError('special')">Password must contain at least one special character</p>
     </div>
 
     <!-- Error banner -->
-    <div *ngIf="errorMessage"
-         class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+    <div *ngIf="errorMessage" class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
       <span class="material-icons text-red-500 text-base">error_outline</span>
       <span class="text-sm text-red-600">{{ errorMessage }}</span>
     </div>
 
     <!-- Submit -->
-    <button
-      type="submit"
-      [disabled]="isLoading"
-      class="w-full h-11 rounded-lg text-white text-sm font-semibold transition-all duration-150
-             bg-blue-700 hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center">
+    <button type="submit" [disabled]="isLoading"
+            class="w-full h-11 rounded-lg text-white text-sm font-semibold transition-all duration-150 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center">
       <span *ngIf="!isLoading">{{ submitLabel }}</span>
-      <span *ngIf="isLoading"
-            class="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+      <span *ngIf="isLoading" class="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
     </button>
 
   </form>

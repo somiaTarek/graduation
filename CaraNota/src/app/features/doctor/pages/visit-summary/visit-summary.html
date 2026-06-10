@@ -1,22 +1,16 @@
 <!-- src/app/features/doctor/pages/visit-summary/visit-summary.html -->
-<!--
-  CDN scripts for PDF export — included at bottom of template.
-  html2canvas + jsPDF loaded lazily so they don't block initial render.
--->
 
 <div class="min-h-screen bg-gray-50 font-sans">
   <app-doctor-navbar />
 
-  <!-- ── POLLING STATE: waiting for AI ─────────────────────────────────── -->
-@if (pageState() === 'loading') {
-  <div class="flex items-center justify-center py-20">
-    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-}
+  <!-- LOADING -->
+  @if (pageState() === 'loading') {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
 
-
-
-  <!-- ── ERROR STATE ────────────────────────────────────────────────────── -->
+  <!-- ERROR -->
   @if (pageState() === 'error') {
     <main class="max-w-md mx-auto px-4 py-20 flex flex-col items-center gap-6 text-center">
       <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
@@ -30,14 +24,13 @@
         <p class="text-sm text-gray-500">{{ errorMsg() }}</p>
       </div>
       <button (click)="goBack()"
-              class="px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold
-                     hover:bg-gray-700 transition-colors">
+              class="px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors">
         Back to today's visits
       </button>
     </main>
   }
 
-  <!-- ── MAIN SUMMARY VIEW ──────────────────────────────────────────────── -->
+  <!-- MAIN -->
   @if (pageState() === 'ready' || pageState() === 'editing' || pageState() === 'saving'
       || pageState() === 'approving' || pageState() === 'approved') {
 
@@ -49,7 +42,7 @@
       </div>
     }
 
-    <!-- Approve overlay spinner -->
+    <!-- Approving overlay -->
     @if (pageState() === 'approving') {
       <div class="fixed inset-0 bg-white/70 backdrop-blur-sm z-40 flex flex-col items-center justify-center gap-4">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -63,10 +56,8 @@
       <div class="flex items-center justify-between">
         <div>
           <button (click)="goBack()"
-                  class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800
-                         transition-colors mb-2 group">
-            <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none"
-                 stroke="currentColor" viewBox="0 0 24 24">
+                  class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-2 group">
+            <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
             Today's visits
@@ -80,20 +71,17 @@
         <!-- Status pills -->
         <div class="flex items-center gap-2">
           @if (pageState() === 'approved') {
-            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-                         bg-green-50 text-green-700 border border-green-200">
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
               <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
               Sent to patient
             </span>
           } @else {
-            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-                         bg-amber-50 text-amber-700 border border-amber-200">
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               Pending approval
             </span>
           }
-          <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-                       bg-purple-50 text-purple-700 border border-purple-100">
+          <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707
@@ -105,10 +93,9 @@
         </div>
       </div>
 
-      <!-- ─── PDF EXPORT AREA (invisible wrapper captured by html2canvas) ─── -->
+      <!-- ─── PDF EXPORT AREA ──────────────────────────────────────────────── -->
       <div id="pdf-export-area">
 
-        <!-- Two-column summary panels -->
         @if (summary()) {
           <div class="grid grid-cols-2 gap-5">
 
@@ -134,59 +121,41 @@
               </div>
 
               <div class="p-5 space-y-4">
-                <!-- Subjective -->
                 <ng-container *ngTemplateOutlet="fieldBlock; context: {
-                  field: 'subjective',
-                  label: 'Subjective',
+                  field: 'subjective', label: 'Subjective',
                   labelClass: 'bg-indigo-50 text-indigo-700',
-                  icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+                  iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
                   value: summary()?.doctorSummary?.subjective
                 }"></ng-container>
 
-                <!-- Objective -->
                 <ng-container *ngTemplateOutlet="fieldBlock; context: {
-                  field: 'objective',
-                  label: 'Objective',
+                  field: 'objective', label: 'Objective',
                   labelClass: 'bg-blue-50 text-blue-700',
-                  icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                  iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
                   value: summary()?.doctorSummary?.objective
                 }"></ng-container>
 
-                <!-- Assessment -->
                 <ng-container *ngTemplateOutlet="fieldBlock; context: {
-                  field: 'assessment',
-                  label: 'Assessment',
+                  field: 'assessment', label: 'Assessment',
                   labelClass: 'bg-amber-50 text-amber-700',
-                  icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                  iconPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                   value: summary()?.doctorSummary?.assessment
                 }"></ng-container>
 
-                <!-- Plan -->
                 <ng-container *ngTemplateOutlet="fieldBlock; context: {
-                  field: 'plan',
-                  label: 'Plan',
+                  field: 'plan', label: 'Plan',
                   labelClass: 'bg-green-50 text-green-700',
-                  icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                  iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
                   value: summary()?.doctorSummary?.plan
                 }"></ng-container>
 
-                <!-- Comparison with previous visit — display only (no edit, populated by backend) -->
-                <div class="space-y-1.5">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                    </svg>
-                    Comparison with previous visit
-                  </span>
-                  <div class="bg-rose-50 border-l-4 border-rose-400 rounded-r-xl p-3 text-sm
-                              text-rose-800 leading-relaxed min-h-[56px]">
-                    <!-- This field comes from backend context when available -->
-                    <span class="text-rose-400 italic text-xs">
-                      Populated by backend from previous visit data
-                    </span>
-                  </div>
-                </div>
+                <ng-container *ngTemplateOutlet="fieldBlock; context: {
+                  field: 'comparisonWithPreviousVisit', label: 'Comparison with previous visit',
+                  labelClass: 'bg-rose-50 text-rose-700',
+                  iconPath: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
+                  value: summary()?.doctorSummary?.comparisonWithPreviousVisit,
+                  alertStyle: true
+                }"></ng-container>
               </div>
             </div>
 
@@ -210,94 +179,206 @@
               </div>
 
               <div class="p-5 space-y-4">
-
-                <!-- Diagnosis (read-only from AI) -->
-                <div class="space-y-1.5">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    </svg>
-                    Diagnosis
-                  </span>
-                  <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-800 leading-relaxed min-h-[44px]">
-                    {{ summary()?.patientSummary?.diagnosis || '—' }}
-                  </div>
-                </div>
-
-                <!-- Symptoms (read-only from AI) -->
-                <div class="space-y-1.5">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                    Symptoms
-                  </span>
-                  <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-800 leading-relaxed min-h-[44px]">
-                    {{ summary()?.patientSummary?.symptoms || '—' }}
-                  </div>
-                </div>
-
-                <!-- Treatment plan (read-only from AI) -->
-                <div class="space-y-1.5">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Treatment plan
-                  </span>
-                  <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-800 leading-relaxed min-h-[44px]">
-                    {{ summary()?.patientSummary?.treatmentPlan || '—' }}
-                  </div>
-                </div>
-
-                <!-- When to seek help — EDITABLE -->
                 <ng-container *ngTemplateOutlet="fieldBlock; context: {
-                  field: 'whenToSeekHelp',
-                  label: 'When to seek help',
+                  field: 'diagnosis', label: 'Diagnosis',
+                  labelClass: 'bg-amber-50 text-amber-700',
+                  iconPath: 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',
+                  value: summary()?.patientSummary?.diagnosis
+                }"></ng-container>
+
+                <ng-container *ngTemplateOutlet="fieldBlock; context: {
+                  field: 'symptoms', label: 'Symptoms',
+                  labelClass: 'bg-blue-50 text-blue-700',
+                  iconPath: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+                  value: summary()?.patientSummary?.symptoms
+                }"></ng-container>
+
+                <ng-container *ngTemplateOutlet="fieldBlock; context: {
+                  field: 'treatmentPlan', label: 'Treatment plan',
+                  labelClass: 'bg-green-50 text-green-700',
+                  iconPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                  value: summary()?.patientSummary?.treatmentPlan
+                }"></ng-container>
+
+                <ng-container *ngTemplateOutlet="fieldBlock; context: {
+                  field: 'whenToSeekHelp', label: 'When to seek help',
                   labelClass: 'bg-red-50 text-red-700',
-                  icon: 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',
+                  iconPath: 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',
                   value: summary()?.patientSummary?.whenToSeekHelp,
                   alertStyle: true
                 }"></ng-container>
 
+                <ng-container *ngTemplateOutlet="fieldBlock; context: {
+                  field: 'followUp', label: 'Follow-up',
+                  labelClass: 'bg-purple-50 text-purple-700',
+                  iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                  value: summary()?.patientSummary?.followUp
+                }"></ng-container>
               </div>
             </div>
 
           </div>
         }
 
+        <!-- Empty state -->
+        @if (!summary() && isManualMode()) {
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 flex flex-col items-center gap-4 text-center">
+            <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+              <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800 mb-1">Manual entry mode</h3>
+              <p class="text-sm text-gray-400">
+                No AI summary yet. Use the SOAP notes page to enter clinical notes, or
+                go back and use recording mode to generate an AI summary.
+              </p>
+            </div>
+            <button (click)="goBack()"
+                    class="mt-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors">
+              Back to today's visits
+            </button>
+          </div>
+        }
+
       </div><!-- /pdf-export-area -->
 
-      <!-- ── EXPORT BUTTON ─────────────────────────────────────────────── -->
-      <div class="flex justify-end">
-        <button (click)="exportPDF()"
-                [disabled]="isExporting()"
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                       bg-gray-900 text-white hover:bg-gray-700 transition-colors
-                       disabled:opacity-60 disabled:cursor-not-allowed">
-          @if (isExporting()) {
-            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+      <!-- Export button -->
+      @if (summary()) {
+        <div class="flex justify-end">
+          <button (click)="exportPDF()"
+                  [disabled]="isExporting()"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
+                         bg-gray-900 text-white hover:bg-gray-700 transition-colors
+                         disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isExporting()) {
+              <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+              Generating PDF…
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0
+                     01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Export as PDF
+            }
+          </button>
+        </div>
+      }
+
+      <!-- ─── AI SUMMARY RATING ─────────────────────────────────────────────
+           Shown after approval so the doctor can rate the AI quality.
+           Only renders when there is a summary to rate.
+           Hidden once submitted (ratingState === 'submitted').
+      ──────────────────────────────────────────────────────────────────────── -->
+      @if (summary() && ratingState() !== 'submitted') {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969
+                0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54
+                1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1
+                1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
-            Generating PDF…
-          } @else {
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0
-                   01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Export as PDF
+            <h3 class="font-semibold text-gray-800">Rate the AI summary</h3>
+            <span class="text-xs text-gray-400 ml-1">— optional, helps improve accuracy</span>
+          </div>
+
+          <!-- Star picker -->
+          <div class="flex items-center gap-1 mb-4">
+            @for (star of [1,2,3,4,5]; track star) {
+              <button
+                type="button"
+                (mouseenter)="ratingHover.set(star)"
+                (mouseleave)="ratingHover.set(0)"
+                (click)="selectedRating.set(star)"
+                [disabled]="ratingState() === 'submitting'"
+                class="p-1 rounded-lg transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50">
+                <svg class="w-8 h-8 transition-colors"
+                     [class]="isStarActive(star) ? 'text-amber-400' : 'text-gray-200'"
+                     fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969
+                    0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54
+                    1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1
+                    1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+              </button>
+            }
+            @if (selectedRating() > 0) {
+              <span class="ml-2 text-sm font-medium text-gray-600">
+                {{ ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'][selectedRating()] }}
+              </span>
+            }
+          </div>
+
+          <!-- Optional feedback textarea -->
+          @if (selectedRating() > 0) {
+            <textarea
+              [ngModel]="ratingFeedback()"
+              (ngModelChange)="ratingFeedback.set($event)"
+              rows="2"
+              placeholder="Optional feedback — what was accurate or inaccurate?"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800
+                     resize-none focus:outline-none focus:ring-2 focus:ring-amber-200 transition mb-4">
+            </textarea>
           }
-        </button>
-      </div>
 
-      <!-- ── APPROVAL ZONE ──────────────────────────────────────────────── -->
+          <!-- Rating error -->
+          @if (ratingError()) {
+            <p class="text-xs text-red-500 mb-3">{{ ratingError() }}</p>
+          }
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between">
+            <button type="button" (click)="skipRating()"
+                    class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+              Skip rating
+            </button>
+            <button type="button"
+                    (click)="submitRating()"
+                    [disabled]="selectedRating() === 0 || ratingState() === 'submitting'"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
+                           transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class]="selectedRating() > 0
+                      ? 'bg-amber-400 text-white hover:bg-amber-500'
+                      : 'bg-gray-100 text-gray-400'">
+              @if (ratingState() === 'submitting') {
+                <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Submitting…
+              } @else {
+                Submit rating
+              }
+            </button>
+          </div>
+
+        </div>
+      }
+
+      <!-- Rating submitted confirmation -->
+      @if (ratingState() === 'submitted') {
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0
+                00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p class="text-sm text-amber-800 font-medium">Thank you — your rating helps improve the AI.</p>
+        </div>
+      }
+
+      <!-- Approval zone -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-
         <div class="flex items-center gap-2 mb-4">
           <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -308,10 +389,8 @@
                  -1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
           </svg>
           <h3 class="font-semibold text-gray-800">Approve &amp; send to patient</h3>
-          <span class="text-xs text-gray-400 ml-1">— single API call saves to visit and notifies patient</span>
         </div>
 
-        <!-- Approval checkboxes -->
         <div class="grid grid-cols-2 gap-3 mb-4">
 
           <!-- Doctor note approval -->
@@ -320,8 +399,7 @@
                   [class]="docApproved()
                     ? 'bg-green-50 border-green-300 text-green-800'
                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'"
-                  class="flex items-center justify-between p-3.5 rounded-xl border-2
-                         transition-all disabled:cursor-default text-left">
+                  class="flex items-center justify-between p-3.5 rounded-xl border-2 transition-all disabled:cursor-default text-left">
             <div class="flex items-center gap-2.5">
               <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
@@ -348,8 +426,7 @@
                   [class]="patApproved()
                     ? 'bg-green-50 border-green-300 text-green-800'
                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'"
-                  class="flex items-center justify-between p-3.5 rounded-xl border-2
-                         transition-all disabled:cursor-default text-left">
+                  class="flex items-center justify-between p-3.5 rounded-xl border-2 transition-all disabled:cursor-default text-left">
             <div class="flex items-center gap-2.5">
               <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
@@ -367,31 +444,9 @@
               }
             </div>
           </button>
-
         </div>
 
-        <!-- Follow-up date -->
-        @if (pageState() !== 'approved') {
-          <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl">
-            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <span class="text-sm text-gray-500 shrink-0">Follow-up date <span class="text-gray-400">(optional)</span></span>
-            <input type="date"
-                   [(ngModel)]="followUpDate"
-                   [ngModel]="followUpDate()"
-                   (ngModelChange)="followUpDate.set($event)"
-                   class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5
-                          text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300
-                          bg-white transition">
-            @if (followUpDate()) {
-              <span class="text-xs text-gray-400 shrink-0">→ {{ formatFollowUpDisplay() }}</span>
-            }
-          </div>
-        }
-
-        <!-- Send button / approved state -->
+        <!-- Send / Done button -->
         <div class="flex items-center justify-between">
           <p class="text-xs text-gray-400">
             @if (pageState() === 'approved') {
@@ -400,33 +455,29 @@
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9
                     10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                Approved — summary saved to visit and sent to patient
+                Approved — summary saved and sent to patient
               </span>
             } @else if (!bothApproved()) {
               Approve both summaries to unlock send
-            } @else {
-              POST /api/visits/{{ visitId() }}/summary/approve  — saves to visit &amp; notifies patient
             }
           </p>
 
           @if (pageState() !== 'approved') {
             <button (click)="sendToPatient()"
                     [disabled]="!bothApproved() || pageState() === 'approving'"
-                    class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold
-                           transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
                     [class]="bothApproved()
                       ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-200'
                       : 'bg-gray-100 text-gray-400'">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
               </svg>
               Send to patient
             </button>
           } @else {
             <button (click)="goBack()"
-                    class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold
-                           bg-green-600 text-white hover:bg-green-700 transition-colors">
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
               </svg>
@@ -441,12 +492,12 @@
 
 </div>
 
-<!-- ── INLINE EDIT MODAL ────────────────────────────────────────────────────── -->
+<!-- ── INLINE EDIT MODAL ─────────────────────────────────────────────────── -->
 @if (pageState() === 'editing' || pageState() === 'saving') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h3 class="font-semibold text-gray-800 capitalize">Edit {{ editingField() }}</h3>
+        <h3 class="font-semibold text-gray-800">Edit — {{ editLabel() }}</h3>
         <button (click)="cancelEdit()" class="text-gray-400 hover:text-gray-700 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -455,7 +506,6 @@
       </div>
       <div class="px-6 py-5">
         <textarea
-          [(ngModel)]="editDraft"
           [ngModel]="editDraft()"
           (ngModelChange)="editDraft.set($event)"
           rows="6"
@@ -466,15 +516,13 @@
       </div>
       <div class="flex justify-end gap-3 px-6 pb-5">
         <button (click)="cancelEdit()"
-                class="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium
-                       text-gray-600 hover:bg-gray-50 transition-colors">
+                class="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
           Cancel
         </button>
         <button (click)="saveEdit()"
                 [disabled]="pageState() === 'saving'"
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white
-                       text-sm font-semibold hover:bg-blue-700 transition-colors
-                       disabled:opacity-60 disabled:cursor-not-allowed">
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold
+                       hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
           @if (pageState() === 'saving') {
             <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -490,12 +538,12 @@
   </div>
 }
 
-<!-- ── REUSABLE FIELD BLOCK TEMPLATE ─────────────────────────────────────────── -->
+<!-- ── REUSABLE FIELD BLOCK TEMPLATE ──────────────────────────────────────── -->
 <ng-template #fieldBlock
   let-field="field"
   let-label="label"
   let-labelClass="labelClass"
-  let-icon="icon"
+  let-iconPath="iconPath"
   let-value="value"
   let-alertStyle="alertStyle">
 
@@ -503,13 +551,14 @@
     <div class="flex items-center justify-between">
       <span [class]="'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ' + labelClass">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="icon"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="iconPath"/>
         </svg>
         {{ label }}
       </span>
       @if (pageState() !== 'approved') {
-        <button (click)="startEdit(field, value)"
-                class="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
+        <button (click)="startEdit(field, label, value)"
+                class="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors
+                       px-2 py-1 rounded-lg hover:bg-blue-50">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828
@@ -520,8 +569,7 @@
       }
     </div>
     @if (alertStyle) {
-      <div class="bg-red-50 border-l-4 border-red-400 rounded-r-xl p-3 text-sm
-                  text-red-800 leading-relaxed min-h-[44px]">
+      <div class="bg-red-50 border-l-4 border-red-400 rounded-r-xl p-3 text-sm text-red-800 leading-relaxed min-h-[44px]">
         {{ value || '—' }}
       </div>
     } @else {
@@ -532,7 +580,3 @@
   </div>
 
 </ng-template>
-
-<!-- CDN scripts for PDF export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

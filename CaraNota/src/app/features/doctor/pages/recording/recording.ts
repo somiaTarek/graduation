@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 // add these imports at the top
 
-import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DoctorNavbar } from '../../../../layout/doctor-layout/doctor-navbar/doctor-navbar';
@@ -32,7 +31,7 @@ type RecordingState = 'idle' | 'recording' | 'paused' | 'stopped';
 @Component({
   selector: 'app-recording',
   standalone: true,
-  imports: [CommonModule, RouterModule, DoctorNavbar],
+  imports: [ RouterModule, DoctorNavbar],
   templateUrl: './recording.html',
   styleUrl: './recording.css',
 })

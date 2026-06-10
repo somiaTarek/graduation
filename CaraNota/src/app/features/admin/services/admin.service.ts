@@ -19,9 +19,8 @@ import {
   UpdateAdminProfileDto,
   AdminStats,
 } from '../models/admin.model';
-import { DoctorService } from '../../../core/services/doctor.service';
+import { DoctorService, Doctor } from '../../../core/services/doctor.service';
 import { PatientService } from '../../../core/services/patient.service';
-import { Doctor } from '../../../core/models/appointment.model';
 import { API } from '../../../core/constants/api';
 
 @Injectable({ providedIn: 'root' })
@@ -87,7 +86,7 @@ export class AdminService {
   }
 
   deleteReceptionist(id: number): Observable<void> {
-    return this.http.delete<void>(API.ADMIN.RECEPTIONIST_BY_ID(id));
+    return this.http.delete<void>(API.ADMIN.DELETE_RECEPTIONIST(id));
   }
 
   // ── Create staff ──────────────────────────────────────────────────────────

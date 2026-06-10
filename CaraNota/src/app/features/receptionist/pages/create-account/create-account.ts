@@ -25,7 +25,7 @@ export class CreateAccount {
   successMessage = signal('');
 
   onFormSubmit(payload: RegisterRequest): void {
-    const dto: RegisterRequest = { ...payload, role: 'patient' };
+    const dto: RegisterRequest = { ...payload };
 
     this.isLoading.set(true);
     this.errorMessage.set('');

@@ -1,7 +1,7 @@
 // core/models/appointment.model.ts
-// Aligned with swagger__2_.json (current source of truth)
+// Aligned with swagger__3_.json (latest source of truth)
 
-// ── Appointment ───────────────────────────────────────────────────────────────
+// - Appointment -
 export interface Appointment {
   appointmentID:   number;
   startTime:       string;
@@ -19,12 +19,12 @@ export interface Appointment {
 export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled';
 
 export interface CreateAppointmentDto {
-  startTime:      string;   // ISO 8601
-  endTime:        string;
+  startTime:       string;   // ISO 8601
+  endTime:         string;
   appointmentType: string;
-  patientID:      number;
-  doctorID:       number;
-  receptionistID: number;   // required in swagger — no ?
+  patientID:       number;
+  doctorID:        number;
+  receptionistID:  number;   // required in swagger — no ?
 }
 
 export interface UpdateAppointmentDto {
@@ -39,13 +39,15 @@ export interface TimeSlot {
   end:   string;
 }
 
-// ── Visit ─────────────────────────────────────────────────────────────────────
+// - Visit -
 export interface Visit {
-  visitID: number;  // was visitId  visitDate:     string;
+  visitID:       number;
+  visitDate?:    string;
   subjective?:   string;
   objective?:    string;
   assessment?:   string;
   plan?:         string;
+  symptoms?:     string;
   appointmentID: number;
 }
 
@@ -56,7 +58,7 @@ export interface CreateVisitDto {
   objective?:    string;
   assessment?:   string;
   plan?:         string;
-  symptoms?:     string;   // swagger includes this in CreateVisitDto
+  symptoms?:     string;
 }
 
 // Matches swagger UpdateVisitDto exactly
@@ -67,10 +69,10 @@ export interface UpdateVisitDto {
   plan?:           string;
   symptoms?:       string;
   whenToSeekHelp?: string;
-  followUp?:       string; // swagger field name is `followUp`, not `followUpDate`
+  followUp?:       string;  // swagger field name is `followUp`, not `followUpDate`
 }
 
-// ── Audio ─────────────────────────────────────────────────────────────────────
+// - Audio -
 export interface AudioRecordResponseDto {
   audioId:      number;
   audioFileUrl: string;
@@ -88,25 +90,27 @@ export interface AudioStatusDto {
   transcription?: string;
 }
 
-// ── Summary ───────────────────────────────────────────────────────────────────
+// - Summary -
 
-// Doctor-facing SOAP summary — `doctorRating` not in swagger, correctly excluded
+// Doctor-facing SOAP summary — matches swagger DoctorSummaryDto
+// ✅ comparisonWithPreviousVisit added (was missing from old model)
 export interface DoctorSummaryDto {
-  aiSummaryId: number;
-  subjective:  string;
-  objective:   string;
-  assessment:  string;
-  plan:        string;
+  aiSummaryId:                number;
+  subjective?:                string;
+  objective?:                 string;
+  assessment?:                string;
+  plan?:                      string;
+  comparisonWithPreviousVisit?: string;  // ← nullable in swagger
 }
 
-// Matches swagger PatientSummaryDto exactly — `followUp` IS in the schema
+// Matches swagger PatientSummaryDto exactly
 export interface PatientSummaryDto {
   aiSummaryId:     number;
-  diagnosis:       string;
-  symptoms:        string;
-  treatmentPlan:   string;
-  whenToSeekHelp:  string;
-  followUp:        string; // present in swagger — was incorrectly removed before
+  diagnosis?:      string;
+  symptoms?:       string;
+  treatmentPlan?:  string;
+  whenToSeekHelp?: string;
+  followUp?:       string;
 }
 
 export interface VisitSummaryResponseDto {
@@ -116,27 +120,30 @@ export interface VisitSummaryResponseDto {
   patientSummary: PatientSummaryDto;
 }
 
-// Matches swagger EditSummaryDto — all 9 fields included
+// Matches swagger EditSummaryDto — all 10 fields (doctor + patient combined)
 export interface UpdateSummaryDto {
-  subjective?:     string;
-  objective?:      string;
-  assessment?:     string;
-  plan?:           string;
-  diagnosis?:      string; // ← was missing
-  symptoms?:       string; // ← was missing
-  treatmentPlan?:  string; // ← was missing
-  whenToSeekHelp?: string;
-  followUp?:       string; // ← was missing; field name is `followUp` not `followUpDate`
+  // Doctor summary fields
+  subjective?:                  string;
+  objective?:                   string;
+  assessment?:                  string;
+  plan?:                        string;
+  comparisonWithPreviousVisit?: string;
+  // Patient summary fields
+  diagnosis?:                   string;
+  symptoms?:                    string;
+  treatmentPlan?:               string;
+  whenToSeekHelp?:              string;
+  followUp?:                    string;
 }
 
-// POST /api/visits/{id}/summary/approve — no request body in swagger
+// POST /api/visits/{id}/summary/approve — no request body
 export interface ApproveSummaryDto {
   // intentionally empty — endpoint takes no body
 }
 
 // POST /api/visits/{id}/summary/rating — RateSummaryDto
 export interface RateSummaryDto {
-  rating:    number; // integer
+  rating:    number;
   feedback?: string;
 }
 
@@ -148,7 +155,6 @@ export interface RateSummaryResponseDto {
 }
 
 // GET /api/visits/{id}/patient-summary — PatientSummaryViewDto
-// Field is `followUp`, not `followUpDate` — consistent with rest of swagger
 export interface PatientSummaryViewDto {
   visitId:         number;
   visitDate:       string;
@@ -156,16 +162,15 @@ export interface PatientSummaryViewDto {
   symptoms?:       string;
   treatmentPlan?:  string;
   whenToSeekHelp?: string;
-  followUp?:       string; // was `followUpDate` — corrected to match swagger
+  followUp?:       string;
 }
 
-// ── Doctor ────────────────────────────────────────────────────────────────────
-// phoneNumber is required — confirmed by CreateDoctorDto (required, minLength:1)
+// - Doctor -
 export interface Doctor {
   id:          number;
   fullName:    string;
   email:       string;
-  phoneNumber: string; // required — no ?
+  phoneNumber?: string;
   specialty:   string;
 }
 
@@ -174,7 +179,7 @@ export interface UpdateDoctorDto {
   specialty: string;
 }
 
-// ── Prescription ──────────────────────────────────────────────────────────────
+// - Prescription -
 export interface Prescription {
   id:           number;
   instructions: string;
@@ -199,7 +204,7 @@ export interface AddMedicationToPrescriptionDto {
   notes?:       string;
 }
 
-// ── Lab Test ──────────────────────────────────────────────────────────────────
+// - Lab Test -
 export interface LabTest {
   id:          number;
   labTestName: string;
@@ -211,18 +216,14 @@ export interface CreateLabTestDto {
   visitID:     number;
 }
 
-// ── Diagnosis ─────────────────────────────────────────────────────────────────
-// ⚠️ `icD10Code` — exact casing from .NET backend, do not normalize
+// - Diagnosis -
+// ⚠️ Using integer Id now (swagger uses int32, not ICD string code)
 export interface Diagnosis {
-  icD10Code:     string;
+  id:            number;
   diagnosisName: string;
 }
 
 export interface CreateDiagnosisDto {
   diagnosisName: string;
   visitID:       number;
-}
-
-export interface AssignDiagnosisDto {
-  icD10Code: string;
 }

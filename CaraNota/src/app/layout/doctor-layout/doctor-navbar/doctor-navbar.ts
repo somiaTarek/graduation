@@ -6,9 +6,8 @@
 import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { DoctorService } from '../../../core/services/doctor.service';
+import { DoctorService, Doctor } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Doctor } from '../../../core/models/appointment.model';
 
 @Component({
   selector: 'app-doctor-navbar',

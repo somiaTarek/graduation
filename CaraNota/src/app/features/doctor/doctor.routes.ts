@@ -51,4 +51,9 @@ export const DOCTOR_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/patients/patients').then(m => m.Patients),
   },
+  {
+  path: 'visit-note/:visitId',
+  loadComponent: () =>
+    import('./pages/visit-note/visit-note').then(m => m.VisitNote),
+},
 ];
