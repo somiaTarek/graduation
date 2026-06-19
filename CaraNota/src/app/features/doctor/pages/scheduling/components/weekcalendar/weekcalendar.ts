@@ -11,8 +11,7 @@ interface WeekDay {
   isToday: boolean;
 }
 
-// Color palette — cycles per appointment index within a day
-// Each entry: Tailwind bg + left-border color (inline style) + text color class
+// Color palette — cycles per appointment id so colors are stable across re-renders
 const PALETTES = [
   { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' }, // blue
   { bg: '#EDE9FE', border: '#8B5CF6', text: '#5B21B6' }, // violet
@@ -35,7 +34,7 @@ export class Weekcalendar implements OnChanges {
   @Output() weekChanged = new EventEmitter<Date>();
 
   readonly rowHeight = 64;
-  readonly dayNames = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  readonly dayNames  = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
   readonly timeSlots = [
     { label: '9 AM',  hour: 9  },
     { label: '10 AM', hour: 10 },
@@ -49,10 +48,6 @@ export class Weekcalendar implements OnChanges {
   weekDays: WeekDay[] = [];
   weekLabel = '';
 
-  // Tracks how many events have been rendered per day column so we can
-  // assign a unique palette index to each appointment.
-  private _dayCounters: number[] = [];
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['weekStart'] || changes['events']) {
       this.buildWeek();
@@ -60,19 +55,24 @@ export class Weekcalendar implements OnChanges {
   }
 
   private buildWeek(): void {
-    const months = ['January','February','March','April','May','June',
-                    'July','August','September','October','November','December'];
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const months  = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+    // Compare date parts as strings — avoids any UTC/timezone shift
+    const todayDatePart = this.getTodayDatePart(); // "YYYY-MM-DD"
 
     this.weekDays = this.dayNames.map((name, i) => {
       const d = new Date(this.weekStart);
       d.setDate(d.getDate() + i);
+      const y  = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const datePart = `${y}-${mo}-${dd}`;
       return {
         name,
         shortName: name.slice(0, 3).toUpperCase(),
-        date: d.getDate(),
-        fullDate: d,
-        isToday: d.toISOString().slice(0, 10) === todayIso,
+        date:      d.getDate(),
+        fullDate:  d,
+        isToday:   datePart === todayDatePart,
       };
     });
 
@@ -81,26 +81,30 @@ export class Weekcalendar implements OnChanges {
     this.weekLabel = `${s.getDate()} ${months[s.getMonth()]} → ${e.getDate()} ${months[e.getMonth()]}`;
   }
 
+  // ── Week navigation — step by exactly 7 days ──────────────────────────────
+
   prevWeek(): void {
     const prev = new Date(this.weekStart);
-    prev.setDate(prev.getDate() - 6);
+    prev.setDate(prev.getDate() - 7); // ✅ was -6 (bug: caused overlapping weeks)
     this.weekChanged.emit(prev);
   }
 
   nextWeek(): void {
     const next = new Date(this.weekStart);
-    next.setDate(next.getDate() + 6);
+    next.setDate(next.getDate() + 7); // ✅ was +6 (bug: caused overlapping weeks)
     this.weekChanged.emit(next);
   }
 
-  /** All events for a given day column (by index), regardless of slot. */
+  // ── Event helpers ─────────────────────────────────────────────────────────
+
+  /** All events for a given day column (used in template if needed) */
   getEventsForDay(dayIdx: number): CalendarEvent[] {
     return this.events.filter(e => e.dayIndex === dayIdx);
   }
 
   /**
-   * Returns events that START in this slot hour.
-   * We use this to render them once at the right row.
+   * Events that START in this slot hour for a given day column.
+   * Rendered once at the correct row — no duplicates across rows.
    */
   getEvents(dayIdx: number, slotHour: number): CalendarEvent[] {
     return this.events.filter(
@@ -113,7 +117,7 @@ export class Weekcalendar implements OnChanges {
     return (startHour - slotHour) * this.rowHeight;
   }
 
-  /** Pixel height — minimum 44 px so short appts remain readable */
+  /** Pixel height — minimum 44 px so short appointments remain readable */
   getEventHeight(start: number, end: number): number {
     return Math.max((end - start) * this.rowHeight - 4, 44);
   }
@@ -122,19 +126,27 @@ export class Weekcalendar implements OnChanges {
     return `${this.hourToString(start)} – ${this.hourToString(end)}`;
   }
 
-  /**
-   * Returns the palette for a given event.
-   * We use the event id modulo palette length so colors are stable across re-renders.
-   */
+  /** Stable color per event — id modulo palette length */
   getPalette(evt: CalendarEvent): { bg: string; border: string; text: string } {
     return PALETTES[evt.id % PALETTES.length];
   }
 
+  // ── Private helpers ───────────────────────────────────────────────────────
+
   private hourToString(hour: number): string {
-    const h = Math.floor(hour);
-    const m = Math.round((hour - h) * 60);
+    const h      = Math.floor(hour);
+    const m      = Math.round((hour - h) * 60);
     const suffix = h >= 12 ? 'PM' : 'AM';
-    const display = h > 12 ? h - 12 : h === 0 ? 12 : h;
-    return `${display}:${m === 0 ? '00' : String(m).padStart(2, '0')} ${suffix}`;
+    const disp   = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return `${disp}:${m === 0 ? '00' : String(m).padStart(2, '0')} ${suffix}`;
+  }
+
+  /** Today's date as "YYYY-MM-DD" from local clock — no UTC conversion */
+  private getTodayDatePart(): string {
+    const t  = new Date();
+    const y  = t.getFullYear();
+    const mo = String(t.getMonth() + 1).padStart(2, '0');
+    const d  = String(t.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
   }
 }

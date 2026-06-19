@@ -34,11 +34,9 @@
         <div></div>
         @for (day of weekDays; track day.date) {
           <div class="text-center py-3 border-l border-gray-100">
-            <!-- Short name on narrow screens -->
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               {{ day.shortName }}
             </p>
-            <!-- Date number — highlighted when today -->
             <p class="text-sm font-bold mt-0.5 w-7 h-7 flex items-center justify-center
                       mx-auto rounded-full transition-colors"
                [class.bg-\[#2C6FAC\]]="day.isToday"
@@ -69,11 +67,6 @@
                    [style.height.px]="rowHeight">
 
                 @for (evt of getEvents(dayIdx, slot.hour); track evt.id) {
-                  <!--
-                    Colors are applied via [style] so they work even when Tailwind
-                    has not pre-generated the dynamic class names at build time.
-                    getPalette() returns { bg, border, text } hex strings.
-                  -->
                   <div class="absolute left-1 right-1 rounded-xl px-2 py-1
                               text-[11px] font-semibold cursor-pointer z-10
                               shadow-sm hover:shadow-md hover:brightness-95
@@ -84,16 +77,13 @@
                        [style.top.px]="getTopOffset(slot.hour, evt.startHour)"
                        [style.height.px]="getEventHeight(evt.startHour, evt.endHour)">
 
-                    <!-- Time range -->
                     <p class="leading-tight font-semibold opacity-80 truncate">
                       {{ formatEventTime(evt.startHour, evt.endHour) }}
                     </p>
 
-                    <!-- Patient name — bold, slightly larger -->
                     <p class="leading-tight font-bold text-[12px] truncate mt-0.5">
                       {{ evt.patientName }}
                     </p>
-
 
                   </div>
                 }
